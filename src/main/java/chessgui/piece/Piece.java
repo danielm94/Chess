@@ -1,5 +1,7 @@
 package chessgui.piece;
 
+import chessgui.Board;
+
 public interface Piece {
     String getFilePath();
 
@@ -13,5 +15,7 @@ public interface Piece {
 
     int getY();
 
-    boolean canMove(int destination_x, int destination_y);
+    boolean canMove(int destinationX, int destinationY);
+
+    Board getBoard();
 }

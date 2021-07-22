@@ -1,6 +1,6 @@
 package chessgui;
 
-import chessgui.pieces.*;
+import chessgui.piece.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,19 +14,18 @@ import java.util.ArrayList;
 
 
 public class Board extends JComponent {
-
-    public int turnCounter = 1;
+    private int turnCounter = 1;
     private static final Image NULL_IMAGE = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
 
     private final int SQUARE_WIDTH = 65;
-    public ArrayList<Piece> White_Pieces;
-    public ArrayList<Piece> Black_Pieces;
+    public ArrayList<Piece> whitePieces;
+    public ArrayList<Piece> blackPieces;
 
 
-    public ArrayList<DrawingShape> Static_Shapes;
-    public ArrayList<DrawingShape> Piece_Graphics;
+    public ArrayList<DrawingShape> staticShapes;
+    public ArrayList<DrawingShape> pieceGraphics;
 
-    public Piece Active_Piece;
+    public Piece activePieces;
 
     private final int ROWS = 8;
     private final int COLS = 8;
@@ -40,52 +39,48 @@ public class Board extends JComponent {
             }
         }
 
-        //Image white_piece = loadImage("images/white_pieces/" + piece_name + ".png");
-        //Image black_piece = loadImage("images/black_pieces/" + piece_name + ".png");  
+        whitePieces.add(new King(3, 0, true, ImagePaths.WHITE_KING.getPath(), this));
+        whitePieces.add(new Queen(4, 0, true, ImagePaths.WHITE_QUEEN.getPath(), this));
+        whitePieces.add(new Bishop(2, 0, true, ImagePaths.WHITE_BISHOP.getPath(), this));
+        whitePieces.add(new Bishop(5, 0, true, ImagePaths.WHITE_BISHOP.getPath(), this));
+        whitePieces.add(new Knight(1, 0, true, ImagePaths.WHITE_KNIGHT.getPath(), this));
+        whitePieces.add(new Knight(6, 0, true, ImagePaths.WHITE_KNIGHT.getPath(), this));
+        whitePieces.add(new Rook(0, 0, true, ImagePaths.WHITE_ROOK.getPath(), this));
+        whitePieces.add(new Rook(7, 0, true, ImagePaths.WHITE_ROOK.getPath(), this));
+        whitePieces.add(new Pawn(0, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(1, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(2, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(3, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(4, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(5, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(6, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
+        whitePieces.add(new Pawn(7, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
 
-        White_Pieces.add(new King(3, 0, true, ImagePaths.WHITE_KING.getPath(), this));
-        White_Pieces.add(new Queen(4, 0, true, ImagePaths.WHITE_QUEEN.getPath(), this));
-        White_Pieces.add(new Bishop(2, 0, true, ImagePaths.WHITE_BISHOP.getPath(), this));
-        White_Pieces.add(new Bishop(5, 0, true, ImagePaths.WHITE_BISHOP.getPath(), this));
-        White_Pieces.add(new Knight(1, 0, true, ImagePaths.WHITE_KNIGHT.getPath(), this));
-        White_Pieces.add(new Knight(6, 0, true, ImagePaths.WHITE_KNIGHT.getPath(), this));
-        White_Pieces.add(new Rook(0, 0, true, ImagePaths.WHITE_ROOK.getPath(), this));
-        White_Pieces.add(new Rook(7, 0, true, ImagePaths.WHITE_ROOK.getPath(), this));
-        White_Pieces.add(new Pawn(0, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(1, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(2, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(3, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(4, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(5, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(6, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-        White_Pieces.add(new Pawn(7, 1, true, ImagePaths.WHITE_PAWN.getPath(), this));
-
-        Black_Pieces.add(new King(3, 7, false, ImagePaths.BLACK_KING.getPath(), this));
-        Black_Pieces.add(new Queen(4, 7, false, ImagePaths.BLACK_QUEEN.getPath(), this));
-        Black_Pieces.add(new Bishop(2, 7, false, ImagePaths.BLACK_BISHOP.getPath(), this));
-        Black_Pieces.add(new Bishop(5, 7, false, ImagePaths.BLACK_BISHOP.getPath(), this));
-        Black_Pieces.add(new Knight(1, 7, false, ImagePaths.BLACK_KNIGHT.getPath(), this));
-        Black_Pieces.add(new Knight(6, 7, false, ImagePaths.BLACK_KNIGHT.getPath(), this));
-        Black_Pieces.add(new Rook(0, 7, false, ImagePaths.BLACK_ROOK.getPath(), this));
-        Black_Pieces.add(new Rook(7, 7, false, ImagePaths.BLACK_ROOK.getPath(), this));
-        Black_Pieces.add(new Pawn(0, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(1, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(2, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(3, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(4, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(5, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(6, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
-        Black_Pieces.add(new Pawn(7, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new King(3, 7, false, ImagePaths.BLACK_KING.getPath(), this));
+        blackPieces.add(new Queen(4, 7, false, ImagePaths.BLACK_QUEEN.getPath(), this));
+        blackPieces.add(new Bishop(2, 7, false, ImagePaths.BLACK_BISHOP.getPath(), this));
+        blackPieces.add(new Bishop(5, 7, false, ImagePaths.BLACK_BISHOP.getPath(), this));
+        blackPieces.add(new Knight(1, 7, false, ImagePaths.BLACK_KNIGHT.getPath(), this));
+        blackPieces.add(new Knight(6, 7, false, ImagePaths.BLACK_KNIGHT.getPath(), this));
+        blackPieces.add(new Rook(0, 7, false, ImagePaths.BLACK_ROOK.getPath(), this));
+        blackPieces.add(new Rook(7, 7, false, ImagePaths.BLACK_ROOK.getPath(), this));
+        blackPieces.add(new Pawn(0, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(1, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(2, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(3, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(4, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(5, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(6, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
+        blackPieces.add(new Pawn(7, 6, false, ImagePaths.BLACK_PAWN.getPath(), this));
 
     }
 
     public Board() {
-
         BOARD_GRID = new Integer[ROWS][COLS];
-        Static_Shapes = new ArrayList<>();
-        Piece_Graphics = new ArrayList<>();
-        White_Pieces = new ArrayList<>();
-        Black_Pieces = new ArrayList<>();
+        staticShapes = new ArrayList<>();
+        pieceGraphics = new ArrayList<>();
+        whitePieces = new ArrayList<>();
+        blackPieces = new ArrayList<>();
 
         initGrid();
 
@@ -106,50 +101,60 @@ public class Board extends JComponent {
 
 
     private void drawBoard() {
-        Piece_Graphics.clear();
-        Static_Shapes.clear();
+        pieceGraphics.clear();
+        staticShapes.clear();
         //initGrid();
 
         Image board = loadImage(BOARD_FILE_PATH);
-        Static_Shapes.add(new DrawingImage(board, new Rectangle2D.Double(0, 0, board.getWidth(null), board.getHeight(null))));
-        if (Active_Piece != null) {
+        staticShapes.add(new DrawingImage(board, new Rectangle2D.Double(0, 0, board.getWidth(null), board.getHeight(null))));
+        if (activePieces != null) {
             Image active_square = loadImage(ImagePaths.ACTIVE_SQUARE.getPath());
-            Static_Shapes.add(new DrawingImage(active_square, new Rectangle2D.Double(SQUARE_WIDTH * Active_Piece.getX(), SQUARE_WIDTH * Active_Piece.getY(), active_square.getWidth(null), active_square.getHeight(null))));
+            staticShapes.add(new DrawingImage(active_square, new Rectangle2D.Double(SQUARE_WIDTH * activePieces.getX(), SQUARE_WIDTH * activePieces.getY(), active_square.getWidth(null), active_square.getHeight(null))));
         }
-        for (int i = 0; i < White_Pieces.size(); i++) {
-            int COL = White_Pieces.get(i)
-                                  .getX();
-            int ROW = White_Pieces.get(i)
-                                  .getY();
-            Image piece = loadImage(White_Pieces.get(i)
-                                                .getFilePath());
-            Piece_Graphics.add(new DrawingImage(piece, new Rectangle2D.Double(SQUARE_WIDTH * COL, SQUARE_WIDTH * ROW, piece.getWidth(null), piece.getHeight(null))));
+        for (Piece white_piece : whitePieces) {
+            int COL = white_piece
+                    .getX();
+            int ROW = white_piece
+                    .getY();
+            Image piece = loadImage(white_piece
+                    .getFilePath());
+            pieceGraphics.add(new DrawingImage(piece, new Rectangle2D.Double(SQUARE_WIDTH * COL, SQUARE_WIDTH * ROW, piece.getWidth(null), piece.getHeight(null))));
         }
-        for (int i = 0; i < Black_Pieces.size(); i++) {
-            int COL = Black_Pieces.get(i)
-                                  .getX();
-            int ROW = Black_Pieces.get(i)
-                                  .getY();
-            Image piece = loadImage(Black_Pieces.get(i)
-                                                .getFilePath());
-            Piece_Graphics.add(new DrawingImage(piece, new Rectangle2D.Double(SQUARE_WIDTH * COL, SQUARE_WIDTH * ROW, piece.getWidth(null), piece.getHeight(null))));
+        for (Piece black_piece : blackPieces) {
+            int COL = black_piece
+                    .getX();
+            int ROW = black_piece
+                    .getY();
+            Image piece = loadImage(black_piece
+                    .getFilePath());
+            pieceGraphics.add(new DrawingImage(piece, new Rectangle2D.Double(SQUARE_WIDTH * COL, SQUARE_WIDTH * ROW, piece.getWidth(null), piece.getHeight(null))));
         }
         this.repaint();
     }
 
 
     public Piece getPiece(int x, int y) {
-        for (Piece p : White_Pieces) {
+        for (Piece p : whitePieces) {
             if (p.getX() == x && p.getY() == y) {
                 return p;
             }
         }
-        for (Piece p : Black_Pieces) {
+        for (Piece p : blackPieces) {
             if (p.getX() == x && p.getY() == y) {
                 return p;
             }
         }
         return null;
+    }
+
+    public void removePiece(Piece piece) {
+        if (piece == null) return;
+        if (piece.isWhite()) whitePieces.remove(piece);
+        else blackPieces.remove(piece);
+    }
+
+    public int getTurnCounter() {
+        return turnCounter;
     }
 
     private MouseAdapter mouseAdapter = new MouseAdapter() {
@@ -162,43 +167,60 @@ public class Board extends JComponent {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            int d_X = e.getX();
-            int d_Y = e.getY();
-            int Clicked_Row = d_Y / SQUARE_WIDTH;
-            int Clicked_Column = d_X / SQUARE_WIDTH;
-            boolean is_whites_turn = turnCounter % 2 == 1;
+            int dX = e.getX();
+            int dY = e.getY();
+            int clickedRow = dY / SQUARE_WIDTH;
+            int clickedColumn = dX / SQUARE_WIDTH;
+          //  System.out.println("X = " + clickedColumn + " Y = " + clickedRow);
+            boolean isWhitesTurn = turnCounter % 2 == 1;
 
-            Piece clicked_piece = getPiece(Clicked_Column, Clicked_Row);
+            Piece clicked_piece = getPiece(clickedColumn, clickedRow);
 
-            if (Active_Piece == null && clicked_piece != null &&
-                    ((is_whites_turn && clicked_piece.isWhite()) || (!is_whites_turn && clicked_piece.isBlack()))) {
-                Active_Piece = clicked_piece;
-            } else if (Active_Piece != null && Active_Piece.getX() == Clicked_Column && Active_Piece.getY() == Clicked_Row) {
-                Active_Piece = null;
-            } else if (Active_Piece != null && Active_Piece.canMove(Clicked_Column, Clicked_Row)
-                    && ((is_whites_turn && Active_Piece.isWhite()) || (!is_whites_turn && Active_Piece.isBlack()))) {
+
+            if (activePieces == null && clicked_piece != null &&
+                    ((isWhitesTurn && clicked_piece.isWhite()) || (!isWhitesTurn && !clicked_piece.isWhite()))) {
+                activePieces = clicked_piece;
+            } else if (activePieces != null && activePieces.getX() == clickedColumn && activePieces.getY() == clickedRow) {
+                activePieces = null;
+            } else if (activePieces != null && activePieces.getClass().equals(King.class) && Math.abs(clickedColumn - activePieces.getX()) > 1) { // If player is trying to castle.
+                King king = (King) activePieces;
+                if (king.canCastle(clickedColumn, clickedRow)) {
+                    int rookX = clickedColumn > king.getX() ? 7 : 0;
+                    int rookDestination = clickedColumn == 1 ? 2 : 4;
+                    Piece rook = getPiece(rookX, clickedRow);
+                    king.setX(clickedColumn);
+                    king.setY(clickedRow);
+                    king.setHasMoved(true);
+                    rook.setX(rookDestination);
+                    rook.setY(clickedRow);
+                    advanceTurn();
+                }
+            } else if (activePieces != null && activePieces.canMove(clickedColumn, clickedRow)
+                    && ((isWhitesTurn && activePieces.isWhite()) || (!isWhitesTurn && !activePieces.isWhite()))) {
                 // if piece is there, remove it so we can be there
                 if (clicked_piece != null) {
-                    if (clicked_piece.isWhite()) {
-                        White_Pieces.remove(clicked_piece);
-                    } else {
-                        Black_Pieces.remove(clicked_piece);
-                    }
+                    removePiece(clicked_piece);
                 }
                 // do move
-                Active_Piece.setX(Clicked_Column);
-                Active_Piece.setY(Clicked_Row);
+                int prevX = activePieces.getX();
+                int prevY = activePieces.getY();
+                activePieces.setX(clickedColumn);
+                activePieces.setY(clickedRow);
 
                 // if piece is a pawn set has_moved to true
-                if (Active_Piece.getClass()
-                                .equals(Pawn.class)) {
-                    Pawn castedPawn = (Pawn) (Active_Piece);
+                if (activePieces.getClass().equals(Pawn.class)) {
+                    Pawn castedPawn = (Pawn) activePieces;
                     castedPawn.setHasMoved(true);
+                    castedPawn.setTurnMoved(turnCounter);
+                    castedPawn.setMovedTwoSpaces(Math.abs(prevY - clickedRow) == 2);
+                } else if (activePieces.getClass().equals(King.class)) {
+                    King castedKing = (King) activePieces;
+                    castedKing.setHasMoved(true);
+                } else if (activePieces.getClass().equals(Rook.class)) {
+                    Rook castedRook = (Rook) activePieces;
+                    castedRook.setHasMoved(true);
                 }
-
-
-                Active_Piece = null;
-                turnCounter++;
+                advanceTurn();
             }
 
             drawBoard();
@@ -219,10 +241,15 @@ public class Board extends JComponent {
 
     };
 
+    private void advanceTurn() {
+        activePieces = null;
+        turnCounter++;
+    }
+
     private void adjustShapePositions(double dx, double dy) {
 
-        Static_Shapes.get(0)
-                     .adjustPosition(dx, dy);
+        staticShapes.get(0)
+                    .adjustPosition(dx, dy);
         this.repaint();
 
     }
@@ -230,7 +257,8 @@ public class Board extends JComponent {
 
     private Image loadImage(String imageFile) {
         try {
-            return ImageIO.read(new File(imageFile));
+            //return ImageIO.read(new File(imageFile));
+            return ImageIO.read(ClassLoader.getSystemResource(imageFile));
         } catch (IOException e) {
             return NULL_IMAGE;
         }
@@ -252,11 +280,11 @@ public class Board extends JComponent {
 
 
     private void drawShapes(Graphics2D g2) {
-        for (DrawingShape shape : Static_Shapes) {
+        for (DrawingShape shape : staticShapes) {
             // g2.rotate(180, 0, 0);
             shape.draw(g2);
         }
-        for (DrawingShape shape : Piece_Graphics) {
+        for (DrawingShape shape : pieceGraphics) {
             // g2.rotate(180, 0, 0);
             shape.draw(g2);
         }

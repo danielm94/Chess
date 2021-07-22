@@ -1,30 +1,32 @@
 package chessgui.piece;
 
 import chessgui.Board;
+import chessgui.piece.piece_logic.ValidateDestination;
 
 public class Rook implements Piece {
     private int x;
     private int y;
-    private final boolean is_white;
-    private final String file_path;
-    public Board board;
+    private final boolean IS_WHITE;
+    private final String FILE_PATH;
+    private final Board BOARD;
+    private boolean hasMoved;
 
-    public Rook(int x, int y, boolean is_white, String file_path, Board board) {
-        this.is_white = is_white;
+    public Rook(int x, int y, boolean isWhite, String FILE_PATH, Board board) {
+        this.IS_WHITE = isWhite;
         this.x = x;
         this.y = y;
-        this.file_path = file_path;
-        this.board = board;
+        this.FILE_PATH = FILE_PATH;
+        this.BOARD = board;
     }
 
     @Override
     public String getFilePath() {
-        return file_path;
+        return FILE_PATH;
     }
 
     @Override
     public boolean isWhite() {
-        return is_white;
+        return IS_WHITE;
     }
 
     @Override
@@ -48,7 +50,23 @@ public class Rook implements Piece {
     }
 
     @Override
-    public boolean canMove(int destination_x, int destination_y) {
-        return false;
+    public Board getBoard() {
+        return BOARD;
+    }
+
+    @Override
+    public boolean canMove(int destinationX, int destinationY) {
+        return ValidateDestination.isValidStraightLine(this, destinationX, destinationY)
+                && ValidateDestination.isNotOccupiedByFriendly(this, destinationX, destinationY, BOARD)
+                && ValidateDestination.isPathClear(this, destinationX, destinationY, BOARD);
+    }
+
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 }

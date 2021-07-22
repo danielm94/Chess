@@ -11,6 +11,6 @@ public class ChessGUI {
         ChessGUI gui = new ChessGUI();
         gui.boardframe = new BoardFrame();
         gui.boardframe.setVisible(true);
-        
+
     }
 }

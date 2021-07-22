@@ -1,32 +1,37 @@
 package chessgui.piece;
 
 import chessgui.Board;
+import chessgui.piece.piece_logic.ValidateDestination;
 
 public class Pawn implements Piece {
     private int x;
     private int y;
-    private final boolean is_white;
-    private final String file_path;
-    public Board board;
-    private boolean has_moved;
+    private final boolean IS_WHITE;
+    private final String FILE_PATH;
+    private final Board BOARD;
+    private boolean hasMoved;
+    private int turnMoved;
+    private boolean movedTwoSpaces;
 
-    public Pawn(int x, int y, boolean is_white, String file_path, Board board) {
-        this.is_white = is_white;
+    public Pawn(int x, int y, boolean isWhite, String FILE_PATH, Board board) {
+        this.IS_WHITE = isWhite;
         this.x = x;
         this.y = y;
-        this.file_path = file_path;
-        this.board = board;
-        this.has_moved = false;
+        this.FILE_PATH = FILE_PATH;
+        this.BOARD = board;
+        this.hasMoved = false;
+        this.turnMoved = -1;
+        this.movedTwoSpaces = false;
     }
 
     @Override
     public String getFilePath() {
-        return file_path;
+        return FILE_PATH;
     }
 
     @Override
     public boolean isWhite() {
-        return is_white;
+        return IS_WHITE;
     }
 
     @Override
@@ -50,15 +55,87 @@ public class Pawn implements Piece {
     }
 
     @Override
-    public boolean canMove(int destination_x, int destination_y) {
-        return false;
+    public boolean canMove(int destinationX, int destinationY) {
+        Piece destinationPiece = BOARD.getPiece(destinationX, destinationY);
+        if (destinationPiece == null) {
+            if (IS_WHITE) {
+                return canEncroissant(destinationX, destinationY - 1) ||
+                        isValidEmptySquareForPawn(destinationX, destinationY);
+            } else {
+                return canEncroissant(destinationX, destinationY + 1)
+                        || isValidEmptySquareForPawn(destinationX, destinationY);
+            }
+        } else if (destinationPiece.isWhite() != IS_WHITE) {
+            return canBeCapturedByPawn(destinationX, destinationY);
+        } else {
+            return false;
+        }
     }
 
-    public void setHasMoved(boolean has_moved) {
-        this.has_moved = has_moved;
+    @Override
+    public Board getBoard() {
+        return BOARD;
+    }
+
+    public boolean isValidEmptySquareForPawn(int destinationX, int destinationY) {
+        if (IS_WHITE) {
+            if (hasMoved) {
+                return destinationY - y == 1 && destinationX == x;
+            } else {
+                return destinationY - y > 0 && destinationY - y <= 2 && destinationX == x;
+            }
+        } else {
+            if (hasMoved) {
+                return y - destinationY == 1 && destinationX == x;
+            } else {
+                return y - destinationY > 0 && y - destinationY <= 2 && destinationX == x;
+            }
+        }
+    }
+
+    public boolean canBeCapturedByPawn(int destinationX, int destinationY) {
+        if (!ValidateDestination.isNotOccupiedByFriendly(this, destinationX, destinationY, BOARD)) return false;
+        return IS_WHITE ? destinationY - y == 1 && (destinationX - x == 1 || destinationX - x == -1)
+                : y - destinationY == 1 && (destinationX - x == 1 || destinationX - x == -1);
+    }
+
+    public boolean canEncroissant(int destinationX, int destinationY) {
+        Piece destPiece = BOARD.getPiece(destinationX, destinationY);
+        if (destPiece == null || !destPiece.getClass()
+                                           .equals(Pawn.class)) {
+            return false;
+        } else {
+            if (destinationY == y
+                    && Math.abs(destinationX - x) == 1
+                    && ((Pawn) destPiece).movedTwoSpaces
+                    && BOARD.getTurnCounter() == ((Pawn) destPiece).turnMoved + 1) {
+                BOARD.removePiece(destPiece);
+                return true;
+            } else return false;
+        }
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
     public boolean getHasMoved() {
-        return has_moved;
+        return hasMoved;
+    }
+
+    public int getTurnMoved() {
+        return turnMoved;
+    }
+
+    public void setTurnMoved(int turnMoved) {
+        this.turnMoved = turnMoved;
+    }
+
+    public boolean isMovedTwoSpaces() {
+        return movedTwoSpaces;
+    }
+
+    public void setMovedTwoSpaces(boolean movedTwoSpaces) {
+        this.movedTwoSpaces = movedTwoSpaces;
     }
 }
