@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 public class Board extends JComponent {
 
-    public int turnCounter = 0;
+    public int turnCounter = 1;
     private static final Image NULL_IMAGE = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
 
     private final int SQUARE_WIDTH = 65;
@@ -166,11 +166,7 @@ public class Board extends JComponent {
             int d_Y = e.getY();
             int Clicked_Row = d_Y / SQUARE_WIDTH;
             int Clicked_Column = d_X / SQUARE_WIDTH;
-            boolean is_whites_turn = true;
-            if (turnCounter % 2 == 1) {
-                is_whites_turn = false;
-
-            }
+            boolean is_whites_turn = turnCounter % 2 == 1;
 
             Piece clicked_piece = getPiece(Clicked_Column, Clicked_Row);
 
