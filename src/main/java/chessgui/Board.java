@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 public class Board extends JComponent {
     private int turnCounter = 1;
     private static final Image NULL_IMAGE = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
-
     private final int SQUARE_WIDTH = 65;
     public ArrayList<Piece> whitePieces;
     public ArrayList<Piece> blackPieces;
@@ -31,6 +29,7 @@ public class Board extends JComponent {
     private final int COLS = 8;
     private final Integer[][] BOARD_GRID;
     private final String BOARD_FILE_PATH = ImagePaths.CHESSBOARD.getPath();
+    private boolean waitingForPromotion = false;
 
     public void initGrid() {
         for (int i = 0; i < ROWS; i++) {
@@ -88,12 +87,9 @@ public class Board extends JComponent {
         this.setPreferredSize(new Dimension(520, 520));
         this.setMinimumSize(new Dimension(100, 100));
         this.setMaximumSize(new Dimension(1000, 1000));
-
         this.addMouseListener(mouseAdapter);
         this.addComponentListener(componentAdapter);
         this.addKeyListener(keyAdapter);
-
-
         this.setVisible(true);
         this.requestFocus();
         drawBoard();
@@ -171,7 +167,7 @@ public class Board extends JComponent {
             int dY = e.getY();
             int clickedRow = dY / SQUARE_WIDTH;
             int clickedColumn = dX / SQUARE_WIDTH;
-          //  System.out.println("X = " + clickedColumn + " Y = " + clickedRow);
+            System.out.println("X = " + clickedColumn + " Y = " + clickedRow);
             boolean isWhitesTurn = turnCounter % 2 == 1;
 
             Piece clicked_piece = getPiece(clickedColumn, clickedRow);
@@ -210,9 +206,55 @@ public class Board extends JComponent {
                 // if piece is a pawn set has_moved to true
                 if (activePieces.getClass().equals(Pawn.class)) {
                     Pawn castedPawn = (Pawn) activePieces;
-                    castedPawn.setHasMoved(true);
-                    castedPawn.setTurnMoved(turnCounter);
-                    castedPawn.setMovedTwoSpaces(Math.abs(prevY - clickedRow) == 2);
+                    if (!castedPawn.getHasMoved()) {
+                        castedPawn.setHasMoved(true);
+                        castedPawn.setTurnMoved(turnCounter);
+                        castedPawn.setMovedTwoSpaces(Math.abs(prevY - clickedRow) == 2);
+                    }
+                    if ((castedPawn.getY() == 7 && castedPawn.isWhite()) || (castedPawn.getY() == 0 && !castedPawn.isWhite())) {
+                        JButton[] options = new JButton[4];
+                        options[0] = new JButton("Queen");
+                        options[1] = new JButton("Rook");
+                        options[2] = new JButton("Bishop");
+                        options[3] = new JButton("Knight");
+
+                        JOptionPane promotionPane = new JOptionPane("Promote pawn to which piece?", JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_CANCEL_OPTION, null, options, options[0]);
+                        JDialog dialog = new JDialog(JOptionPane.getRootFrame(), "Promotion");
+                        dialog.setContentPane(promotionPane);
+                        dialog.pack();
+                        dialog.setVisible(true);
+                        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+                        ActionListener actionListener = new AbstractAction() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                JButton button = (JButton) (e.getSource());
+                                Piece promotedPawn = switch (button.getText()) {
+                                    case "Queen" -> new Queen(activePieces.getX(), activePieces.getY(), activePieces.isWhite(),
+                                            activePieces.isWhite() ? ImagePaths.WHITE_QUEEN.getPath() : ImagePaths.BLACK_QUEEN.getPath(), activePieces.getBoard());
+                                    case "Bishop" -> new Bishop(activePieces.getX(), activePieces.getY(), activePieces.isWhite(),
+                                            activePieces.isWhite() ? ImagePaths.WHITE_BISHOP.getPath() : ImagePaths.BLACK_BISHOP.getPath(), activePieces.getBoard());
+                                    case "Rook" -> new Rook(activePieces.getX(), activePieces.getY(), activePieces.isWhite(),
+                                            activePieces.isWhite() ? ImagePaths.WHITE_ROOK.getPath() : ImagePaths.BLACK_ROOK.getPath(), activePieces.getBoard());
+                                    case "Knight" -> new Knight(activePieces.getX(), activePieces.getY(), activePieces.isWhite(),
+                                            activePieces.isWhite() ? ImagePaths.WHITE_KNIGHT.getPath() : ImagePaths.BLACK_KNIGHT.getPath(), activePieces.getBoard());
+                                    default -> throw new IllegalStateException("Unexpected selection: " + button.getText());
+                                };
+                                if (promotedPawn.isWhite()) {
+                                    whitePieces.set(whitePieces.indexOf(activePieces), promotedPawn);
+                                } else {
+                                    blackPieces.set(blackPieces.indexOf(activePieces), promotedPawn);
+                                }
+                                waitingForPromotion = false;
+                                advanceTurn();
+                                drawBoard();
+                                dialog.dispose();
+                            }
+                        };
+                        for (JButton option : options) {
+                            option.addActionListener(actionListener);
+                        }
+                        waitingForPromotion = true;
+                    }
                 } else if (activePieces.getClass().equals(King.class)) {
                     King castedKing = (King) activePieces;
                     castedKing.setHasMoved(true);
@@ -220,7 +262,9 @@ public class Board extends JComponent {
                     Rook castedRook = (Rook) activePieces;
                     castedRook.setHasMoved(true);
                 }
-                advanceTurn();
+                if (!waitingForPromotion) {
+                    advanceTurn();
+                }
             }
 
             drawBoard();
