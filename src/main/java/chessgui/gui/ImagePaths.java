@@ -1,4 +1,4 @@
-package chessgui;
+package chessgui.gui;
 
 public enum ImagePaths {
 

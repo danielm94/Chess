@@ -1,21 +1,21 @@
 package chessgui.piece.piece_logic;
 
-import chessgui.Board;
+import chessgui.gui.Board;
 import chessgui.piece.Piece;
 
 public class ValidateDestination {
     public static boolean isValidDiagonal(Piece selected, int destX, int destY) {
-        return Math.abs(destX - selected.getX()) == Math.abs(destY - selected.getY());
+        return Math.abs(destX - selected.getCol()) == Math.abs(destY - selected.getRow());
     }
 
     public static boolean isValidStraightLine(Piece selected, int destX, int destY) {
-        return (selected.getX() == destX && Math.abs(destY - selected.getY()) > 0)
-                || (selected.getY() == destY && Math.abs(destX - selected.getX()) > 0);
+        return (selected.getCol() == destX && Math.abs(destY - selected.getRow()) > 0)
+                || (selected.getRow() == destY && Math.abs(destX - selected.getCol()) > 0);
     }
 
     public static boolean isPathClear(Piece selected, int destX, int destY, Board board) {
-        int x = selected.getX();
-        int y = selected.getY();
+        int x = selected.getCol();
+        int y = selected.getRow();
         if (x < destX) x++;
         else if (x > destX) x--;
         if (y < destY) y++;

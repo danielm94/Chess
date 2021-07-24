@@ -1,19 +1,17 @@
 package chessgui.piece;
 
-import chessgui.Board;
+import chessgui.gui.Board;
 
 public interface Piece {
     String getFilePath();
 
     boolean isWhite();
 
-    void setX(int x);
+    void setCol(int col);
 
-    void setY(int y);
-
-    int getX();
-
-    int getY();
+    void setRow(int row);
+    int getRow();
+    int getCol();
 
     boolean canMove(int destinationX, int destinationY);
 

@@ -1,6 +1,6 @@
 package chessgui.piece;
 
-import chessgui.Board;
+import chessgui.gui.Board;
 import chessgui.piece.piece_logic.ValidateDestination;
 
 public class Bishop implements Piece {
@@ -29,22 +29,22 @@ public class Bishop implements Piece {
     }
 
     @Override
-    public void setX(int x) {
-        this.x = x;
+    public void setCol(int col) {
+        this.x = col;
     }
 
     @Override
-    public void setY(int y) {
-        this.y = y;
+    public void setRow(int row) {
+        this.y = row;
     }
 
     @Override
-    public int getX() {
+    public int getCol() {
         return x;
     }
 
     @Override
-    public int getY() {
+    public int getRow() {
         return y;
     }
 

@@ -26,7 +26,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>chessgui.ChessGUI</mainClass>
+                            <mainClass>chessgui.gui.ChessGUI</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
