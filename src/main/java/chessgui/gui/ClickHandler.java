@@ -26,41 +26,50 @@ public class ClickHandler extends MouseAdapter {
         int dY = e.getY();
         int clickedRow = dY / board.getSquareWidth();
         int clickedColumn = dX / board.getSquareWidth();
-        System.out.println("X = " + clickedColumn + " Y = " + clickedRow);
+        System.out.println("Row = " + clickedRow + " Col = " + clickedColumn);
         boolean isWhitesTurn = board.getTurnCounter() % 2 == 1;
         Piece activePiece = board.getActivePiece();
-        Piece clicked_piece = board.getPiece(clickedColumn, clickedRow);
+        Piece clickedPiece = board.getPiece(clickedRow, clickedColumn);
 
 
-        if (activePiece == null && clicked_piece != null &&
-                ((isWhitesTurn && clicked_piece.isWhite()) || (!isWhitesTurn && !clicked_piece.isWhite()))) {
-            board.setActivePiece(clicked_piece);
+        if (activePiece == null && clickedPiece != null &&
+                ((isWhitesTurn && clickedPiece.isWhite()) || (!isWhitesTurn && !clickedPiece.isWhite()))) {
+            board.setActivePiece(clickedPiece);
         } else if (activePiece != null && activePiece.getCol() == clickedColumn && activePiece.getRow() == clickedRow) {
             board.setActivePiece(null);
         } else if (activePiece != null && activePiece.getClass().equals(King.class) && Math.abs(clickedColumn - activePiece.getCol()) > 1) { // If player is trying to castle.
             King king = (King) activePiece;
-            if (king.canCastle(clickedColumn, clickedRow)) {
-                int rookX = clickedColumn > king.getCol() ? 7 : 0;
-                int rookDestination = clickedColumn == 1 ? 2 : 4;
-                Piece rook = board.getPiece(rookX, clickedRow);
-                king.setCol(clickedColumn);
-                king.setRow(clickedRow);
+            if (king.canCastle(clickedRow, clickedColumn)) {
+                int rookCol = clickedColumn > king.getCol() ? 7 : 0;
+                int rookDestCol = clickedColumn <= 2 ? 3 : 5;
+                /*If the player clicked on column 1, (0 indexed) set it the king's destination
+                to column 2, which is the appropriate column when castling queen side.*/
+                int kingCol = clickedColumn == 1 ? 2 : clickedColumn;
+                Piece rook = board.getPiece(clickedRow, rookCol);
+                board.movePiece(king, clickedRow, kingCol);
                 king.setHasMoved(true);
-                rook.setCol(rookDestination);
-                rook.setRow(clickedRow);
+                board.movePiece(rook, clickedRow, rookDestCol);
                 board.advanceTurn();
             }
-        } else if (activePiece != null && activePiece.canMove(clickedColumn, clickedRow)
+        } else if (activePiece != null && activePiece.canMove(clickedRow, clickedColumn)
                 && ((isWhitesTurn && activePiece.isWhite()) || (!isWhitesTurn && !activePiece.isWhite()))) {
             // if piece is there, remove it so we can be there
-            if (clicked_piece != null) {
-                board.removePiece(clicked_piece);
+            if (clickedPiece != null) {
+                board.getAttackerMap().clearPiecePins(clickedPiece);
+                board.getAttackerMap().clearPieceAttackSquares(clickedPiece);
+                board.removePiece(clickedPiece);
+            } else {
+                int enCroissantRow = activePiece.isWhite() ? clickedRow - 1 : clickedRow + 1;
+                if (activePiece.getClass().equals(Pawn.class) && ((Pawn) activePiece).canEncroissant(enCroissantRow, clickedColumn)) {
+                    clickedPiece = board.getPiece(enCroissantRow, clickedColumn);
+                    board.getAttackerMap().clearPiecePins(clickedPiece);
+                    board.getAttackerMap().clearPieceAttackSquares(clickedPiece);
+                    board.removePiece(clickedPiece);
+                }
             }
             // do move
-            int prevX = activePiece.getCol();
-            int prevY = activePiece.getRow();
-            activePiece.setCol(clickedColumn);
-            activePiece.setRow(clickedRow);
+            int prevRow = activePiece.getRow();
+            board.movePiece(activePiece, clickedRow, clickedColumn);
 
             // if piece is a pawn set has_moved to true
             if (activePiece.getClass().equals(Pawn.class)) {
@@ -68,7 +77,7 @@ public class ClickHandler extends MouseAdapter {
                 if (!castedPawn.getHasMoved()) {
                     castedPawn.setHasMoved(true);
                     castedPawn.setTurnMoved(board.getTurnCounter());
-                    castedPawn.setMovedTwoSpaces(Math.abs(prevY - clickedRow) == 2);
+                    castedPawn.setMovedTwoSpaces(Math.abs(prevRow - clickedRow) == 2);
                 }
                 if ((castedPawn.getRow() == 7 && castedPawn.isWhite()) || (castedPawn.getRow() == 0 && !castedPawn.isWhite())) {
                     JButton[] options = new JButton[4];
@@ -84,20 +93,20 @@ public class ClickHandler extends MouseAdapter {
                     dialog.setVisible(true);
                     dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                     ActionListener actionListener = new AbstractAction() {
-                        Piece activePieceAction = board.getActivePiece();
+                        final Piece activePieceAction = board.getActivePiece();
 
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             JButton button = (JButton) (e.getSource());
                             Piece promotedPawn = switch (button.getText()) {
-                                case "Queen" -> new Queen(activePieceAction.getCol(), activePieceAction.getRow(), activePieceAction.isWhite(),
-                                        activePieceAction.isWhite() ? ImagePaths.WHITE_QUEEN.getPath() : ImagePaths.BLACK_QUEEN.getPath(), activePieceAction.getBoard());
-                                case "Bishop" -> new Bishop(activePieceAction.getCol(), activePieceAction.getRow(), activePieceAction.isWhite(),
-                                        activePieceAction.isWhite() ? ImagePaths.WHITE_BISHOP.getPath() : ImagePaths.BLACK_BISHOP.getPath(), activePieceAction.getBoard());
-                                case "Rook" -> new Rook(activePieceAction.getCol(), activePieceAction.getRow(), activePieceAction.isWhite(),
-                                        activePieceAction.isWhite() ? ImagePaths.WHITE_ROOK.getPath() : ImagePaths.BLACK_ROOK.getPath(), activePieceAction.getBoard());
-                                case "Knight" -> new Knight(activePieceAction.getCol(), activePieceAction.getRow(), activePieceAction.isWhite(),
-                                        activePieceAction.isWhite() ? ImagePaths.WHITE_KNIGHT.getPath() : ImagePaths.BLACK_KNIGHT.getPath(), activePieceAction.getBoard());
+                                case "Queen" -> new Queen(activePieceAction.getRow(), activePieceAction.getCol(), activePieceAction.isWhite(),
+                                        activePieceAction.isWhite() ? ImagePaths.WHITE_QUEEN.getPath() : ImagePaths.BLACK_QUEEN.getPath(), board);
+                                case "Bishop" -> new Bishop(activePieceAction.getRow(), activePieceAction.getCol(), activePieceAction.isWhite(),
+                                        activePieceAction.isWhite() ? ImagePaths.WHITE_BISHOP.getPath() : ImagePaths.BLACK_BISHOP.getPath(), board);
+                                case "Rook" -> new Rook(activePieceAction.getRow(), activePieceAction.getCol(), activePieceAction.isWhite(),
+                                        activePieceAction.isWhite() ? ImagePaths.WHITE_ROOK.getPath() : ImagePaths.BLACK_ROOK.getPath(), board);
+                                case "Knight" -> new Knight(activePieceAction.getRow(), activePieceAction.getCol(), activePieceAction.isWhite(),
+                                        activePieceAction.isWhite() ? ImagePaths.WHITE_KNIGHT.getPath() : ImagePaths.BLACK_KNIGHT.getPath(), board);
                                 default -> throw new IllegalStateException("Unexpected selection: " + button.getText());
                             };
                             if (promotedPawn.isWhite()) {
@@ -105,6 +114,7 @@ public class ClickHandler extends MouseAdapter {
                             } else {
                                 BLACK_PIECES.set(BLACK_PIECES.indexOf(activePieceAction), promotedPawn);
                             }
+                            board.getAttackerMap().updatePieceAttackSquares(promotedPawn);
                             board.setWaitingForPromotion(false);
                             board.advanceTurn();
                             board.drawBoard();
@@ -119,6 +129,16 @@ public class ClickHandler extends MouseAdapter {
             } else if (activePiece.getClass().equals(King.class)) {
                 King castedKing = (King) activePiece;
                 castedKing.setHasMoved(true);
+                if (castedKing.isWhite())
+                    for (Piece piece : board.getBlackPieces()) {
+                        if (piece instanceof PinPiece)
+                            board.getAttackerMap().updatePieceAttackSquares(piece);
+                    }
+                else
+                    for (Piece piece : board.getWhitePieces())
+                        if (piece instanceof PinPiece)
+                            board.getAttackerMap().updatePieceAttackSquares(piece);
+
             } else if (activePiece.getClass().equals(Rook.class)) {
                 Rook castedRook = (Rook) activePiece;
                 castedRook.setHasMoved(true);

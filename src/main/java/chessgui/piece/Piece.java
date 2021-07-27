@@ -10,10 +10,18 @@ public interface Piece {
     void setCol(int col);
 
     void setRow(int row);
+
     int getRow();
+
     int getCol();
 
-    boolean canMove(int destinationX, int destinationY);
+    boolean canMove(int destRow, int destCol);
 
-    Board getBoard();
+    boolean addPieceThisIsPinnedBy(Piece piece);
+
+    boolean removePieceThisIsPinnedBy(Piece piece);
+
+    boolean isPinnedBy(Piece piece);
+
+    int getNumPiecesPinningThis();
 }

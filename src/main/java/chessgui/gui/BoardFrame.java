@@ -5,14 +5,14 @@ import java.awt.*;
 
 public class BoardFrame extends JFrame {
     Component component;
-    public BoardFrame()
-    {
+
+    public BoardFrame() {
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.setTitle("Chess");
         this.setResizable(false);
-        component = new Board();
+        component = new BoardComponent();
         this.add(component, BorderLayout.CENTER);
-        
+
         this.setLocation(200, 50);
         this.pack();
         this.setVisible(true);

@@ -3,25 +3,30 @@ package chessgui.piece;
 import chessgui.gui.Board;
 import chessgui.piece.piece_logic.ValidateDestination;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Pawn implements Piece {
-    private int x;
-    private int y;
+    private int row;
+    private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
     private final Board BOARD;
     private boolean hasMoved;
     private int turnMoved;
     private boolean movedTwoSpaces;
+    private final Set<Piece> PIECES_PINNED_BY;
 
-    public Pawn(int x, int y, boolean isWhite, String FILE_PATH, Board board) {
+    public Pawn(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
         this.IS_WHITE = isWhite;
-        this.x = x;
-        this.y = y;
+        this.row = row;
+        this.col = col;
         this.FILE_PATH = FILE_PATH;
         this.BOARD = board;
         this.hasMoved = false;
         this.turnMoved = -1;
         this.movedTwoSpaces = false;
+        this.PIECES_PINNED_BY = new HashSet<>(16);
     }
 
     @Override
@@ -36,82 +41,101 @@ public class Pawn implements Piece {
 
     @Override
     public void setCol(int col) {
-        this.x = col;
+        this.col = col;
     }
 
     @Override
     public void setRow(int row) {
-        this.y = row;
+        this.row = row;
     }
 
     @Override
     public int getCol() {
-        return x;
+        return col;
     }
 
     @Override
     public int getRow() {
-        return y;
+        return row;
     }
 
     @Override
-    public boolean canMove(int destinationX, int destinationY) {
-        Piece destinationPiece = BOARD.getPiece(destinationX, destinationY);
+    public boolean canMove(int destRow, int destCol) {
+        Piece destinationPiece = BOARD.getPiece(destRow, destCol);
+
+        if (getNumPiecesPinningThis() > 0)
+            if (getNumPiecesPinningThis() == 1 && destinationPiece != null && isPinnedBy(BOARD.getPiece(destRow, destCol)))
+                return canBeCapturedByPawn(destRow, destCol);
+            else
+                return false;
+
         if (destinationPiece == null) {
             if (IS_WHITE) {
-                return canEncroissant(destinationX, destinationY - 1) ||
-                        isValidEmptySquareForPawn(destinationX, destinationY);
+                return canEncroissant(destRow - 1, destCol) ||
+                        isValidEmptySquareForPawn(destRow, destCol);
             } else {
-                return canEncroissant(destinationX, destinationY + 1)
-                        || isValidEmptySquareForPawn(destinationX, destinationY);
+                return canEncroissant(destRow + 1, destCol)
+                        || isValidEmptySquareForPawn(destRow, destCol);
             }
         } else if (destinationPiece.isWhite() != IS_WHITE) {
-            return canBeCapturedByPawn(destinationX, destinationY);
+            return canBeCapturedByPawn(destRow, destCol);
         } else {
             return false;
         }
     }
 
     @Override
-    public Board getBoard() {
-        return BOARD;
+    public boolean addPieceThisIsPinnedBy(Piece piece) {
+        return PIECES_PINNED_BY.add(piece);
     }
 
-    public boolean isValidEmptySquareForPawn(int destinationX, int destinationY) {
+    @Override
+    public boolean removePieceThisIsPinnedBy(Piece piece) {
+        return PIECES_PINNED_BY.remove(piece);
+    }
+
+    @Override
+    public boolean isPinnedBy(Piece piece) {
+        return PIECES_PINNED_BY.contains(piece);
+    }
+
+    @Override
+    public int getNumPiecesPinningThis() {
+        return PIECES_PINNED_BY.size();
+    }
+
+    public boolean isValidEmptySquareForPawn(int destRow, int destCol) {
         if (IS_WHITE) {
             if (hasMoved) {
-                return destinationY - y == 1 && destinationX == x;
+                return destRow - row == 1 && destCol == col;
             } else {
-                return destinationY - y > 0 && destinationY - y <= 2 && destinationX == x;
+                return destRow - row > 0 && destRow - row <= 2 && destCol == col;
             }
         } else {
             if (hasMoved) {
-                return y - destinationY == 1 && destinationX == x;
+                return row - destRow == 1 && destCol == col;
             } else {
-                return y - destinationY > 0 && y - destinationY <= 2 && destinationX == x;
+                return row - destRow > 0 && row - destRow <= 2 && destCol == col;
             }
         }
     }
 
-    public boolean canBeCapturedByPawn(int destinationX, int destinationY) {
-        if (!ValidateDestination.isNotOccupiedByFriendly(this, destinationX, destinationY, BOARD)) return false;
-        return IS_WHITE ? destinationY - y == 1 && (destinationX - x == 1 || destinationX - x == -1)
-                : y - destinationY == 1 && (destinationX - x == 1 || destinationX - x == -1);
+    public boolean canBeCapturedByPawn(int destRow, int destCol) {
+        if (!ValidateDestination.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) return false;
+        return IS_WHITE ? destRow - row == 1 && (destCol - col == 1 || destCol - col == -1)
+                : row - destRow == 1 && (destCol - col == 1 || destCol - col == -1);
     }
 
-    public boolean canEncroissant(int destinationX, int destinationY) {
-        Piece destPiece = BOARD.getPiece(destinationX, destinationY);
+    public boolean canEncroissant(int destRow, int destCol) {
+        Piece destPiece = BOARD.getPiece(destRow, destCol);
         if (destPiece == null || !destPiece.getClass()
                                            .equals(Pawn.class)) {
             return false;
         } else {
-            if (destinationY == y
-                    && Math.abs(destinationX - x) == 1
+            return destRow == row
+                    && Math.abs(destCol - col) == 1
                     && ((Pawn) destPiece).movedTwoSpaces
-                    && BOARD.getTurnCounter() == ((Pawn) destPiece).turnMoved + 1) {
-                BOARD.removePiece(destPiece);
-                return true;
-            } else return false;
+                    && BOARD.getTurnCounter() == ((Pawn) destPiece).turnMoved + 1;
         }
     }
 

@@ -9,7 +9,8 @@ public enum ImagePaths {
     WHITE_KNIGHT("images/white_pieces/Knight.png"), WHITE_ROOK("images/white_pieces/Rook.png"),
     WHITE_QUEEN("images/white_pieces/Queen.png"), WHITE_KING("images/white_pieces/King.png"),
     ACTIVE_SQUARE("images/active_square.png"), CHESSBOARD("images/board.png"),
-    BLACK_PIECES_FOLDER("images/black_pieces/"), WHITE_PIECES_FOLDER("images/white_pieces/");
+    VALID_EMPTY_SQUARE("images/valid_empty.png"), ATTACKABLE_SQUARE("images/attackable_square.png");
+
 
     private final String path;
 
