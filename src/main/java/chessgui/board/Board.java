@@ -252,14 +252,24 @@ public class Board {
         activePiece = null;
         turnCounter++;
         if (getKing(isWhitesTurn).isMated()) {
+            if (getGui().getParentFrame().isSoundEnabled()) SoundEffects.playCheckmateSound();
             setWaitingForDialogExit(true);
             JDialog checkMateDialog = new GameOverDialog(this, "Checkmate!", "Checkmate! " + (isWhitesTurn ? "Black " : "White ") + "wins!");
             checkMateDialog.setVisible(true);
+            return;
         } else if (stalemateReached()) {
+            if (getGui().getParentFrame().isSoundEnabled()) SoundEffects.playStalemateSound();
             setWaitingForDialogExit(true);
             JDialog stalemateDialog = new GameOverDialog(this, "Stalemate!",
                     "Stalemate! What were you thinking " + (isWhitesTurn ? "Black?" : "White?"));
             stalemateDialog.setVisible(true);
+            return;
+        }
+        if (gui.getParentFrame().isSoundEnabled()) {
+            if (inStateOfCheck())
+                SoundEffects.playCheckSound();
+            else
+                SoundEffects.playMoveSound();
         }
     }
 
@@ -287,7 +297,7 @@ public class Board {
                 movePiece(king, clickedRow, kingCol);
                 king.setCanCastle(false);
                 movePiece(rook, clickedRow, rookDestCol);
-                if (gui.getParentFrame().isSoundEnabled()) SoundEffects.playMoveSound();
+
                 advanceTurn();
             } else {
                 if (gui.getParentFrame().isSoundEnabled()) SoundEffects.playInvalidMoveSound();
@@ -341,14 +351,8 @@ public class Board {
                 Rook castedRook = (Rook) activePiece;
                 castedRook.setCanCastle(false);
             }
-            if ((isWhitesTurn && getKing(false).isChecked())
-                    || !isWhitesTurn && getKing(true).isChecked()) {
-                stateOfCheck = true;
-                if (gui.getParentFrame().isSoundEnabled()) SoundEffects.playCheckSound();
-            } else {
-                stateOfCheck = false;
-                if (gui.getParentFrame().isSoundEnabled()) SoundEffects.playMoveSound();
-            }
+            stateOfCheck = (isWhitesTurn && getKing(false).isChecked())
+                    || !isWhitesTurn && getKing(true).isChecked();
             if (!isWaitingForDialogExit()) {
                 advanceTurn();
             }
@@ -360,13 +364,10 @@ public class Board {
 
     private boolean stalemateReached() {
         List<Piece> pieces = isWhitesTurn ? whitePieces : blackPieces;
-        for (Piece piece : pieces) {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
+        for (Piece piece : pieces)
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
                     if (piece.canMove(i, j)) return false;
-                }
-            }
-        }
         return true;
     }
 }

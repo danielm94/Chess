@@ -44,7 +44,7 @@ public class BoardFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String fen = JOptionPane.showInputDialog("Enter FEN");
                 //25 is the length of the shortest possible FEN (an empty board)
-                if (fen.length() >= 25) {
+                if (fen != null && fen.length() >= 25) {
                     dispose();
                     Main.main(new String[]{fen});
                 }
@@ -64,7 +64,7 @@ public class BoardFrame extends JFrame {
             }
         });
 
-        /*JCheckBoxMenuItem playSFX = new JCheckBoxMenuItem("Play Sound Effects");
+        JCheckBoxMenuItem playSFX = new JCheckBoxMenuItem("Play Sound Effects");
         playSFX.setSelected(true);
         playSFX.addActionListener(new AbstractAction() {
             @Override
@@ -72,10 +72,10 @@ public class BoardFrame extends JFrame {
                 JCheckBoxMenuItem jCheckBoxMenuItem = (JCheckBoxMenuItem) e.getSource();
                 playSoundEffects = jCheckBoxMenuItem.isSelected();
             }
-        });*/
+        });
 
         settings.add(showLegalMoves);
-//        settings.add(playSFX);
+        settings.add(playSFX);
         menuBar.add(settings);
         this.setJMenuBar(menuBar);
     }
