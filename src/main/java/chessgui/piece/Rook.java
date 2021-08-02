@@ -1,9 +1,9 @@
 package chessgui.piece;
 
-import chessgui.gui.Board;
-import chessgui.piece.piece_logic.ValidateDestination;
+import chessgui.board.AttackerSquare;
+import chessgui.board.Board;
+import chessgui.board.Helper;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class Rook implements PinPiece {
@@ -12,18 +12,17 @@ public class Rook implements PinPiece {
     private final boolean IS_WHITE;
     private final String FILE_PATH;
     private final Board BOARD;
-    private boolean hasMoved;
-    private final Set<Piece> PIECES_PINNED_BY;
-    private final Set<Piece> PIECES_PINNING;
+    private boolean canCastle;
+    private Piece pieceThisIsPinnedBy;
+    private Piece pieceThisIsPinning;
 
     public Rook(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
+        this.canCastle = false;
         this.IS_WHITE = isWhite;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
         this.BOARD = board;
-        this.PIECES_PINNED_BY = new HashSet<>(16);
-        this.PIECES_PINNING = new HashSet<>(16);
     }
 
     @Override
@@ -58,54 +57,77 @@ public class Rook implements PinPiece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        return ValidateDestination.isValidStraightLine(this, destRow, destCol)
-                && getNumPiecesPinningThis() == 0
-                && ValidateDestination.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)
-                && ValidateDestination.isPathClear(this, destRow, destCol, BOARD);
+        if (BOARD.inStateOfCheck()) {
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
+            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+            return !this.isPinned()
+                    && destinationSquare.containsAttacker(this)
+                    && squaresToBlockOrCapture.contains(destinationSquare);
+        } else {
+            if (BOARD.getAttackerMap().getSquare(destRow, destCol).containsAttacker(this) &&
+                    Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) {
+                if (this.isPinned()) {
+                    if (pieceThisIsPinnedBy.getRow() == row)
+                        return destRow == pieceThisIsPinnedBy.getRow();
+                    else if (pieceThisIsPinnedBy.getCol() == col)
+                        return destCol == pieceThisIsPinnedBy.getCol();
+                } else return true;
+            }
+            return false;
+        }
     }
 
     @Override
-    public boolean addPieceThisIsPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.add(piece);
+    public void setPieceThisIsPinnedBy(Piece piece) {
+        pieceThisIsPinnedBy = piece;
     }
 
     @Override
-    public boolean removePieceThisIsPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.remove(piece);
+    public void clearPieceThisIsPinnedBy() {
+        pieceThisIsPinnedBy = null;
     }
 
     @Override
     public boolean isPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.contains(piece);
+        return pieceThisIsPinnedBy == piece;
     }
 
     @Override
-    public int getNumPiecesPinningThis() {
-        return PIECES_PINNED_BY.size();
+    public boolean isPinned() {
+        return pieceThisIsPinnedBy != null;
     }
 
-    public boolean hasMoved() {
-        return hasMoved;
+    public boolean canCastle() {
+        return canCastle;
     }
 
-    public void setHasMoved(boolean hasMoved) {
-        this.hasMoved = hasMoved;
+    public void setCanCastle(boolean canCastle) {
+        this.canCastle = canCastle;
     }
 
-    public boolean addPieceThisIsPinning(Piece piece) {
-        return PIECES_PINNING.add(piece);
+
+    @Override
+    public void setPieceThisIsPinning(Piece piece) {
+        pieceThisIsPinning = piece;
     }
 
-    public boolean removePieceThisIsPinning(Piece piece) {
-        return PIECES_PINNING.remove(piece);
+    @Override
+    public void clearPieceThisIsPinning() {
+        pieceThisIsPinning = null;
     }
 
     public boolean isPinning(Piece piece) {
-        return PIECES_PINNING.contains(piece);
+        return pieceThisIsPinning == piece;
     }
 
-    public int getNumPiecesPinned() {
-        return PIECES_PINNING.size();
+    @Override
+    public boolean isPinningAnyPiece() {
+        return pieceThisIsPinning != null;
+    }
+
+    @Override
+    public String toString() {
+        return (IS_WHITE ? "White " : "Black ") + "Rook @ " + (char) ('A' + col) + (row + 1);
     }
 
 }

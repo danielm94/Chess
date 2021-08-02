@@ -1,11 +1,12 @@
 package chessgui.piece;
 
 public interface PinPiece extends Piece {
-    boolean addPieceThisIsPinning(Piece piece);
+    void setPieceThisIsPinning(Piece piece);
 
-    boolean removePieceThisIsPinning(Piece piece);
+    void clearPieceThisIsPinning();
 
     boolean isPinning(Piece piece);
 
-    int getNumPiecesPinned();
+    boolean isPinningAnyPiece();
+
 }

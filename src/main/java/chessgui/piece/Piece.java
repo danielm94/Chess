@@ -1,7 +1,5 @@
 package chessgui.piece;
 
-import chessgui.gui.Board;
-
 public interface Piece {
     String getFilePath();
 
@@ -17,11 +15,12 @@ public interface Piece {
 
     boolean canMove(int destRow, int destCol);
 
-    boolean addPieceThisIsPinnedBy(Piece piece);
+    void setPieceThisIsPinnedBy(Piece piece);
 
-    boolean removePieceThisIsPinnedBy(Piece piece);
+    void clearPieceThisIsPinnedBy();
 
     boolean isPinnedBy(Piece piece);
 
-    int getNumPiecesPinningThis();
+    boolean isPinned();
+
 }

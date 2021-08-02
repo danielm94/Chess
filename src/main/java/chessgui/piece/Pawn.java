@@ -1,9 +1,9 @@
 package chessgui.piece;
 
-import chessgui.gui.Board;
-import chessgui.piece.piece_logic.ValidateDestination;
+import chessgui.board.AttackerSquare;
+import chessgui.board.Board;
+import chessgui.board.Helper;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class Pawn implements Piece {
@@ -15,7 +15,7 @@ public class Pawn implements Piece {
     private boolean hasMoved;
     private int turnMoved;
     private boolean movedTwoSpaces;
-    private final Set<Piece> PIECES_PINNED_BY;
+    private Piece pieceThisIsPinnedBy;
 
     public Pawn(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
         this.IS_WHITE = isWhite;
@@ -26,7 +26,6 @@ public class Pawn implements Piece {
         this.hasMoved = false;
         this.turnMoved = -1;
         this.movedTwoSpaces = false;
-        this.PIECES_PINNED_BY = new HashSet<>(16);
     }
 
     @Override
@@ -61,48 +60,70 @@ public class Pawn implements Piece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        Piece destinationPiece = BOARD.getPiece(destRow, destCol);
-
-        if (getNumPiecesPinningThis() > 0)
-            if (getNumPiecesPinningThis() == 1 && destinationPiece != null && isPinnedBy(BOARD.getPiece(destRow, destCol)))
-                return canBeCapturedByPawn(destRow, destCol);
-            else
-                return false;
-
-        if (destinationPiece == null) {
-            if (IS_WHITE) {
-                return canEncroissant(destRow - 1, destCol) ||
-                        isValidEmptySquareForPawn(destRow, destCol);
-            } else {
-                return canEncroissant(destRow + 1, destCol)
-                        || isValidEmptySquareForPawn(destRow, destCol);
+        if (BOARD.inStateOfCheck()) {
+            King king = BOARD.getKing(IS_WHITE);
+            Piece pieceAttackingKing = king.getPieceAttacking();
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
+            if (pieceAttackingKing instanceof Pawn) {
+                if (canEncroissant(IS_WHITE ? destRow - 1 : destRow + 1, destCol))
+                    squaresToBlockOrCapture.add(BOARD.getAttackerMap().getSquare(destRow, destCol));
             }
-        } else if (destinationPiece.isWhite() != IS_WHITE) {
-            return canBeCapturedByPawn(destRow, destCol);
+            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+            Piece pieceOnSquare = BOARD.getPiece(destRow, destCol);
+            if (pieceOnSquare == null) {
+                return !this.isPinned()
+                        && squaresToBlockOrCapture.contains(destinationSquare)
+                        && (isValidEmptySquareForPawn(destRow, destCol) || canEncroissant(IS_WHITE ? destRow - 1 : destRow + 1, destCol));
+            } else {
+                return !this.isPinned()
+                        && squaresToBlockOrCapture.contains(destinationSquare)
+                        && canBeCapturedByPawn(destRow, destCol);
+            }
         } else {
-            return false;
+            Piece destinationPiece = BOARD.getPiece(destRow, destCol);
+
+            if (this.isPinned())
+                if (destinationPiece != null && isPinnedBy(BOARD.getPiece(destRow, destCol)))
+                    return canBeCapturedByPawn(destRow, destCol);
+                else
+                    return false;
+
+            if (destinationPiece == null) {
+                if (IS_WHITE) {
+                    return canEncroissant(destRow - 1, destCol) ||
+                            isValidEmptySquareForPawn(destRow, destCol);
+                } else {
+                    return canEncroissant(destRow + 1, destCol)
+                            || isValidEmptySquareForPawn(destRow, destCol);
+                }
+            } else if (destinationPiece.isWhite() != IS_WHITE) {
+                return canBeCapturedByPawn(destRow, destCol);
+            } else {
+                return false;
+            }
         }
     }
 
     @Override
-    public boolean addPieceThisIsPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.add(piece);
+    public void setPieceThisIsPinnedBy(Piece piece) {
+        pieceThisIsPinnedBy = piece;
     }
 
     @Override
-    public boolean removePieceThisIsPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.remove(piece);
+    public void clearPieceThisIsPinnedBy() {
+        pieceThisIsPinnedBy = null;
     }
 
     @Override
     public boolean isPinnedBy(Piece piece) {
-        return PIECES_PINNED_BY.contains(piece);
+        return pieceThisIsPinnedBy == piece;
     }
 
     @Override
-    public int getNumPiecesPinningThis() {
-        return PIECES_PINNED_BY.size();
+    public boolean isPinned() {
+        return pieceThisIsPinnedBy != null;
     }
+
 
     public boolean isValidEmptySquareForPawn(int destRow, int destCol) {
         if (IS_WHITE) {
@@ -120,8 +141,13 @@ public class Pawn implements Piece {
         }
     }
 
+    @Override
+    public String toString() {
+        return (IS_WHITE ? "White " : "Black ") + "Pawn @ " + (char) ('A' + col) + (row + 1);
+    }
+
     public boolean canBeCapturedByPawn(int destRow, int destCol) {
-        if (!ValidateDestination.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) return false;
+        if (!Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) return false;
         return IS_WHITE ? destRow - row == 1 && (destCol - col == 1 || destCol - col == -1)
                 : row - destRow == 1 && (destCol - col == 1 || destCol - col == -1);
     }
@@ -155,7 +181,7 @@ public class Pawn implements Piece {
         this.turnMoved = turnMoved;
     }
 
-    public boolean isMovedTwoSpaces() {
+    public boolean hasMovedTwoSpaces() {
         return movedTwoSpaces;
     }
 

@@ -1,4 +1,4 @@
-package chessgui.gui;
+package chessgui.board;
 
 import chessgui.piece.*;
 
@@ -16,8 +16,7 @@ public class AttackerMap {
         for (int i = 0; i < 8; i++) {
             ATTACKED_SQUARES_MAP.add(new ArrayList<>());
             for (int j = 0; j < 8; j++) {
-                String squareName = String.valueOf((char) ('A' + j)) + (i + 1);
-                ATTACKED_SQUARES_MAP.get(i).add(new AttackerSquare(squareName));
+                ATTACKED_SQUARES_MAP.get(i).add(new AttackerSquare(i, j));
             }
         }
         setUpAttackerMap();
@@ -66,17 +65,17 @@ public class AttackerMap {
     public void clearPiecePins(Piece piece) {
         if (piece instanceof PinPiece)
             if (piece.isWhite()) {
-                for (Piece blackPiece : board.blackPieces) {
+                for (Piece blackPiece : board.getBlackPieces()) {
                     if (blackPiece.isPinnedBy(piece)) {
-                        blackPiece.removePieceThisIsPinnedBy(piece);
-                        ((PinPiece) piece).removePieceThisIsPinning(blackPiece);
+                        blackPiece.clearPieceThisIsPinnedBy();
+                        ((PinPiece) piece).clearPieceThisIsPinning();
                     }
                 }
             } else {
-                for (Piece whitePiece : board.whitePieces) {
+                for (Piece whitePiece : board.getWhitePieces()) {
                     if (whitePiece.isPinnedBy(piece)) {
-                        whitePiece.removePieceThisIsPinnedBy(piece);
-                        ((PinPiece) piece).removePieceThisIsPinning(whitePiece);
+                        whitePiece.clearPieceThisIsPinnedBy();
+                        ((PinPiece) piece).clearPieceThisIsPinning();
                     }
                 }
             }
@@ -109,11 +108,15 @@ public class AttackerMap {
         int row = pawn.getRow();
         int col = pawn.getCol();
         if (pawn.isWhite()) {
-            if (col > 0) ATTACKED_SQUARES_MAP.get(row + 1).get(col - 1).addAttacker(pawn);
-            if (col < 7) ATTACKED_SQUARES_MAP.get(row + 1).get(col + 1).addAttacker(pawn);
+            if (row < 7) {
+                if (col > 0) ATTACKED_SQUARES_MAP.get(row + 1).get(col - 1).addAttacker(pawn);
+                if (col < 7) ATTACKED_SQUARES_MAP.get(row + 1).get(col + 1).addAttacker(pawn);
+            }
         } else {
-            if (col > 0) ATTACKED_SQUARES_MAP.get(row - 1).get(col - 1).addAttacker(pawn);
-            if (col < 7) ATTACKED_SQUARES_MAP.get(row - 1).get(col + 1).addAttacker(pawn);
+            if (row > 0) {
+                if (col > 0) ATTACKED_SQUARES_MAP.get(row - 1).get(col - 1).addAttacker(pawn);
+                if (col < 7) ATTACKED_SQUARES_MAP.get(row - 1).get(col + 1).addAttacker(pawn);
+            }
         }
     }
 
@@ -127,9 +130,7 @@ public class AttackerMap {
         for (int i = startRow; i <= endRow; i++)
             for (int j = startCol; j <= endCol; j++) {
                 AttackerSquare square = ATTACKED_SQUARES_MAP.get(i).get(j);
-                if ((row != i || col != j)
-                        && (king.isWhite() && square.blackCount == 0)
-                        || (!king.isWhite() && square.whiteCount == 0))
+                if ((row != i || col != j))
                     square.addAttacker(king);
             }
 
@@ -241,7 +242,10 @@ public class AttackerMap {
         square.addAttacker(piece);
         Piece pieceOnSquare = board.getPiece(row, col);
         if (pieceOnSquare != null) {
-            if (pieceOnSquare.isWhite() != piece.isWhite()) checkForPins(piece, row, col, endRow, endCol);
+            if (pieceOnSquare.isWhite() != piece.isWhite())
+                if (pieceOnSquare instanceof King)
+                    pieceOnSquare.setPieceThisIsPinnedBy(piece);
+                else checkForPins(piece, row, col, endRow, endCol);
         }
     }
 
@@ -253,11 +257,10 @@ public class AttackerMap {
         if (startRow == endRow && startCol == endCol) return;
         Piece enemyPiece = board.getPiece(startRow, startCol);
         if (enemyPiece.getClass().equals(King.class)) {
-            enemyPiece.addPieceThisIsPinnedBy(piece);
+            enemyPiece.setPieceThisIsPinnedBy(piece);
             return;
         }
-        King enemyKing = piece.isWhite() ?
-                board.getBlackKing() : board.getWhiteKing();
+        King enemyKing = board.getKing(!piece.isWhite());
 
         //Preliminary checks to see if it's even worth looking for pins.
         //If the king is neither on the same row or col as the rook then it is not possible for the rook to be pinning anything.
@@ -287,16 +290,16 @@ public class AttackerMap {
         while (row != endRow || col != endCol) {
             Piece pieceOnSquare = board.getPiece(row, col);
             if (pieceOnSquare != null) if (pieceOnSquare == enemyKing) {
-                enemyPiece.addPieceThisIsPinnedBy(piece);
+                enemyPiece.setPieceThisIsPinnedBy(piece);
                 if (piece.getClass().equals(Rook.class)) {
                     Rook temp = (Rook) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 } else if (piece.getClass().equals(Bishop.class)) {
                     Bishop temp = (Bishop) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 } else if (piece.getClass().equals(Queen.class)) {
                     Queen temp = (Queen) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 }
             } else return;
             if (row < endRow) row++;
@@ -307,16 +310,16 @@ public class AttackerMap {
         Piece pieceOnSquare = board.getPiece(row, col);
         if (pieceOnSquare != null)
             if (pieceOnSquare == enemyKing) {
-                enemyPiece.addPieceThisIsPinnedBy(piece);
+                enemyPiece.setPieceThisIsPinnedBy(piece);
                 if (piece.getClass().equals(Rook.class)) {
                     Rook temp = (Rook) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 } else if (piece.getClass().equals(Bishop.class)) {
                     Bishop temp = (Bishop) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 } else if (piece.getClass().equals(Queen.class)) {
                     Queen temp = (Queen) piece;
-                    temp.addPieceThisIsPinning(enemyPiece);
+                    temp.setPieceThisIsPinning(enemyPiece);
                 }
             }
     }

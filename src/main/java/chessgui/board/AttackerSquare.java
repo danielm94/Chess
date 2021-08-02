@@ -1,4 +1,4 @@
-package chessgui.gui;
+package chessgui.board;
 
 import chessgui.piece.Piece;
 
@@ -9,11 +9,15 @@ import java.util.StringJoiner;
 public class AttackerSquare {
     private final String SQUARE_NAME;
     private final Set<Piece> ATTACKING_PIECES;
-    int blackCount;
-    int whiteCount;
+    private final int ROW;
+    private final int COL;
+    private int blackCount;
+    private int whiteCount;
 
-    public AttackerSquare(String squareName) {
-        this.SQUARE_NAME = squareName;
+    public AttackerSquare(int row, int col) {
+        this.ROW = row;
+        this.COL = col;
+        this.SQUARE_NAME = String.valueOf((char) ('A' + col)) + (row + 1);
         this.ATTACKING_PIECES = new HashSet<>(32);
         this.blackCount = 0;
         this.whiteCount = 0;
@@ -55,6 +59,14 @@ public class AttackerSquare {
 
     public int getWhiteCount() {
         return whiteCount;
+    }
+
+    public int getRow() {
+        return ROW;
+    }
+
+    public int getCol() {
+        return COL;
     }
 
     @Override
