@@ -1,22 +1,33 @@
-package chessgui.gui;
+package chessgui.gui.dialog_windows;
 
 import chessgui.Main;
 import chessgui.board.Board;
+import chessgui.gui.BoardComponent;
+import chessgui.gui.resource_paths.ImagePaths;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class GameOverDialog extends JDialog {
     private final JButton[] OPTIONS = new JButton[2];
-    private Board board;
+
     private final ActionListener listener;
 
-    public GameOverDialog(Board board, String title, String message) {
+    public GameOverDialog(String title, String message) {
+        try {
+            this.setIconImage(ImageIO.read(ClassLoader.getSystemResource(ImagePaths.WHITE_KING.getPath())));
+        } catch (IOException e) {
+            this.setIconImage(new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB));
+        }
+        this.setResizable(false);
         this.setTitle(title);
-        this.board = board;
+        BoardComponent.get().getParentFrame().disableInputs();
         listener = new GameOverOptionListener(this);
         initializeOptions();
         JOptionPane gameOverPane = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE, JOptionPane.YES_NO_CANCEL_OPTION, null, OPTIONS, OPTIONS[0]);
@@ -24,7 +35,7 @@ public class GameOverDialog extends JDialog {
         this.pack();
         this.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
-                board.getGui().getParentFrame().dispose();
+                BoardComponent.get().getParentFrame().dispose();
             }
         });
     }
@@ -47,12 +58,13 @@ public class GameOverDialog extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e) {
             JButton button = (JButton) e.getSource();
-            switch (button.getText()) {
-                case "New Game" -> {
-                    board.getGui().getParentFrame().dispose();
-                    Main.main(null);
-                }
-                case "Quit" -> board.getGui().getParentFrame().dispose();
+            if (button.getText().equals("New Game")) {
+                Board.get().dispose();
+                BoardComponent.get().getParentFrame().dispose();
+                BoardComponent.get().dispose();
+                Main.main(null);
+            } else if (button.getText().equals("Quit")) {
+                BoardComponent.get().getParentFrame().dispose();
             }
             PARENT_DIALOG.dispose();
         }

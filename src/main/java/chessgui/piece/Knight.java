@@ -1,5 +1,6 @@
 package chessgui.piece;
 
+import chessgui.board.AttackerMap;
 import chessgui.board.AttackerSquare;
 import chessgui.board.Board;
 import chessgui.board.Helper;
@@ -11,15 +12,13 @@ public class Knight implements Piece {
     private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
-    private final Board BOARD;
     private Piece pieceThisIsPinnedBy;
 
-    public Knight(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
+    public Knight(int row, int col, boolean isWhite, String FILE_PATH) {
         this.IS_WHITE = isWhite;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
-        this.BOARD = board;
     }
 
     @Override
@@ -54,17 +53,17 @@ public class Knight implements Piece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        if (BOARD.inStateOfCheck()) {
-            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
-            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+        if (Board.get().inStateOfCheck()) {
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, Board.get());
+            AttackerSquare destinationSquare = AttackerMap.get().getSquare(destRow, destCol);
             return !this.isPinned()
                     && destinationSquare.containsAttacker(this)
                     && squaresToBlockOrCapture.contains(destinationSquare);
 
         } else
             return !this.isPinned()
-                    && BOARD.getAttackerMap().getSquare(destRow, destCol).containsAttacker(this)
-                    && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD);
+                    && AttackerMap.get().getSquare(destRow, destCol).containsAttacker(this)
+                    && Helper.isNotOccupiedByFriendly(this, destRow, destCol);
 
     }
 
@@ -92,6 +91,11 @@ public class Knight implements Piece {
     @Override
     public boolean isPinned() {
         return pieceThisIsPinnedBy != null;
+    }
+
+    @Override
+    public void mapAttackSquares() {
+        AttackerMap.get().markKnightAttackSquares(this);
     }
 
     public boolean isValidKnightSquare(int destRow, int destCol) {

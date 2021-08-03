@@ -12,12 +12,7 @@ public class Helper {
         return Math.abs(destRow - selected.getRow()) == Math.abs(destCol - selected.getCol());
     }
 
-    public static boolean isValidStraightLine(Piece selected, int destRow, int destCol) {
-        return (selected.getCol() == destCol && Math.abs(destRow - selected.getRow()) > 0)
-                || (selected.getRow() == destRow && Math.abs(destCol - selected.getCol()) > 0);
-    }
-
-    public static boolean isPathClear(Piece selected, int destRow, int destCol, Board board) {
+    public static boolean isPathClear(Piece selected, int destRow, int destCol) {
         int row = selected.getRow();
         int col = selected.getCol();
 
@@ -27,7 +22,7 @@ public class Helper {
         else if (col > destCol) col--;
 
         while (row != destRow || col != destCol) {
-            Piece pieceOnTile = board.getPiece(row, col);
+            Piece pieceOnTile = Board.get().getPiece(row, col);
             if (pieceOnTile != null) return false;
             if (row < destRow) row++;
             else if (row > destRow) row--;
@@ -38,7 +33,7 @@ public class Helper {
         return true;
     }
 
-    public static boolean isPathClearToCastle(Piece selected, int destRow, int destCol, Board board) {
+    public static boolean isPathClearToCastle(Piece selected, int destRow, int destCol) {
         int row = selected.getRow();
         int col = selected.getCol();
 
@@ -48,8 +43,8 @@ public class Helper {
         else if (col > destCol) col--;
 
         while (row != destRow || col != destCol) {
-            Piece pieceOnTile = board.getPiece(row, col);
-            AttackerSquare attackerSquare = board.getAttackerMap().getSquare(row, col);
+            Piece pieceOnTile = Board.get().getPiece(row, col);
+            AttackerSquare attackerSquare = AttackerMap.get().getSquare(row, col);
             if (pieceOnTile != null
                     || (selected.isWhite() && attackerSquare.getBlackCount() > 0)
                     || (!selected.isWhite() && attackerSquare.getWhiteCount() > 0)) return false;
@@ -62,15 +57,15 @@ public class Helper {
         return true;
     }
 
-    public static boolean isNotOccupiedByFriendly(Piece selected, int destRow, int destCol, Board board) {
-        Piece destPiece = board.getPiece(destRow, destCol);
+    public static boolean isNotOccupiedByFriendly(Piece selected, int destRow, int destCol) {
+        Piece destPiece = Board.get().getPiece(destRow, destCol);
         if (destPiece == null) return true;
         return selected.isWhite() != destPiece.isWhite();
     }
 
     public static Set<AttackerSquare> getSquaresToBlockOrCapture(boolean forWhite, Board board) {
         King king = board.getKing(forWhite);
-        AttackerMap attackerMap = board.getAttackerMap();
+        AttackerMap attackerMap = AttackerMap.get();
         Piece pieceAttackingKing = king.getPieceAttacking();
         Set<AttackerSquare> squares = new HashSet<>();
 

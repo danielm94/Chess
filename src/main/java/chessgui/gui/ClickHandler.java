@@ -6,20 +6,18 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class ClickHandler extends MouseAdapter {
-    private final Board BOARD;
-
-    public ClickHandler(Board board) {
-        this.BOARD = board;
-    }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (BOARD.isWaitingForDialogExit()) return;
+        if (Board.get().isWaitingForDialogExit()) return;
+        boolean isWhitesTurn = Board.get().isWhitesTurn();
         int dX = e.getX();
         int dY = e.getY();
         int clickedRow = dY / BoardComponent.getSquareWidth();
         int clickedColumn = dX / BoardComponent.getSquareWidth();
+        clickedRow = isWhitesTurn ? 7 - clickedRow : clickedRow;
+        clickedColumn = isWhitesTurn ? 7 - clickedColumn : clickedColumn;
         System.out.println("Row = " + clickedRow + " Col = " + clickedColumn);
-        BOARD.evaluateMove(clickedRow, clickedColumn);
+        Board.get().evaluateMove(clickedRow, clickedColumn);
     }
 }

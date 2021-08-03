@@ -23,4 +23,5 @@ public interface Piece {
 
     boolean isPinned();
 
+    void mapAttackSquares();
 }

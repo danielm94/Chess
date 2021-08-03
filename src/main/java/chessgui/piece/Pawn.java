@@ -1,5 +1,6 @@
 package chessgui.piece;
 
+import chessgui.board.AttackerMap;
 import chessgui.board.AttackerSquare;
 import chessgui.board.Board;
 import chessgui.board.Helper;
@@ -11,18 +12,16 @@ public class Pawn implements Piece {
     private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
-    private final Board BOARD;
     private boolean hasMoved;
     private int turnMoved;
     private boolean movedTwoSpaces;
     private Piece pieceThisIsPinnedBy;
 
-    public Pawn(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
+    public Pawn(int row, int col, boolean isWhite, String FILE_PATH) {
         this.IS_WHITE = isWhite;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
-        this.BOARD = board;
         this.hasMoved = false;
         this.turnMoved = -1;
         this.movedTwoSpaces = false;
@@ -60,16 +59,16 @@ public class Pawn implements Piece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        if (BOARD.inStateOfCheck()) {
-            King king = BOARD.getKing(IS_WHITE);
+        if (Board.get().inStateOfCheck()) {
+            King king = Board.get().getKing(IS_WHITE);
             Piece pieceAttackingKing = king.getPieceAttacking();
-            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, Board.get());
             if (pieceAttackingKing instanceof Pawn) {
                 if (canEncroissant(IS_WHITE ? destRow - 1 : destRow + 1, destCol))
-                    squaresToBlockOrCapture.add(BOARD.getAttackerMap().getSquare(destRow, destCol));
+                    squaresToBlockOrCapture.add(AttackerMap.get().getSquare(destRow, destCol));
             }
-            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
-            Piece pieceOnSquare = BOARD.getPiece(destRow, destCol);
+            AttackerSquare destinationSquare = AttackerMap.get().getSquare(destRow, destCol);
+            Piece pieceOnSquare = Board.get().getPiece(destRow, destCol);
             if (pieceOnSquare == null) {
                 return !this.isPinned()
                         && squaresToBlockOrCapture.contains(destinationSquare)
@@ -80,10 +79,10 @@ public class Pawn implements Piece {
                         && canBeCapturedByPawn(destRow, destCol);
             }
         } else {
-            Piece destinationPiece = BOARD.getPiece(destRow, destCol);
+            Piece destinationPiece = Board.get().getPiece(destRow, destCol);
 
             if (this.isPinned())
-                if (destinationPiece != null && isPinnedBy(BOARD.getPiece(destRow, destCol)))
+                if (destinationPiece != null && isPinnedBy(Board.get().getPiece(destRow, destCol)))
                     return canBeCapturedByPawn(destRow, destCol);
                 else
                     return false;
@@ -124,19 +123,24 @@ public class Pawn implements Piece {
         return pieceThisIsPinnedBy != null;
     }
 
+    @Override
+    public void mapAttackSquares() {
+        AttackerMap.get().markPawnAttackSquares(this);
+    }
+
 
     public boolean isValidEmptySquareForPawn(int destRow, int destCol) {
         if (IS_WHITE) {
             if (hasMoved) {
                 return destRow - row == 1 && destCol == col;
             } else {
-                return destRow - row > 0 && destRow - row <= 2 && destCol == col;
+                return Helper.isPathClear(this, destRow, destCol) && destRow - row > 0 && destRow - row <= 2 && destCol == col;
             }
         } else {
             if (hasMoved) {
                 return row - destRow == 1 && destCol == col;
             } else {
-                return row - destRow > 0 && row - destRow <= 2 && destCol == col;
+                return Helper.isPathClear(this, destRow, destCol) && row - destRow > 0 && row - destRow <= 2 && destCol == col;
             }
         }
     }
@@ -147,13 +151,13 @@ public class Pawn implements Piece {
     }
 
     public boolean canBeCapturedByPawn(int destRow, int destCol) {
-        if (!Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) return false;
+        if (!Helper.isNotOccupiedByFriendly(this, destRow, destCol)) return false;
         return IS_WHITE ? destRow - row == 1 && (destCol - col == 1 || destCol - col == -1)
                 : row - destRow == 1 && (destCol - col == 1 || destCol - col == -1);
     }
 
     public boolean canEncroissant(int destRow, int destCol) {
-        Piece destPiece = BOARD.getPiece(destRow, destCol);
+        Piece destPiece = Board.get().getPiece(destRow, destCol);
         if (destPiece == null || !destPiece.getClass()
                                            .equals(Pawn.class)) {
             return false;
@@ -161,7 +165,7 @@ public class Pawn implements Piece {
             return destRow == row
                     && Math.abs(destCol - col) == 1
                     && ((Pawn) destPiece).movedTwoSpaces
-                    && BOARD.getTurnCounter() == ((Pawn) destPiece).turnMoved + 1;
+                    && Board.get().getTurnCounter() == ((Pawn) destPiece).turnMoved + 1;
         }
     }
 

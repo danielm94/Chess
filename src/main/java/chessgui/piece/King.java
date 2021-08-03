@@ -13,17 +13,15 @@ public class King implements Piece {
     private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
-    private final Board BOARD;
     private boolean canCastle;
     private Piece pinPieceAttackingThis;
 
-    public King(int row, int col, boolean IS_WHITE, String FILE_PATH, Board board) {
+    public King(int row, int col, boolean IS_WHITE, String FILE_PATH) {
         this.canCastle = false;
         this.IS_WHITE = IS_WHITE;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
-        this.BOARD = board;
     }
 
     @Override
@@ -58,31 +56,31 @@ public class King implements Piece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        AttackerSquare destSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+        AttackerSquare destSquare = AttackerMap.get().getSquare(destRow, destCol);
         int enemiesAttackingDest = IS_WHITE ? destSquare.getBlackCount() : destSquare.getWhiteCount();
 
-        if (isChecked() && BOARD.getPiece(destRow, destCol) != pinPieceAttackingThis) {
+        if (isChecked() && Board.get().getPiece(destRow, destCol) != pinPieceAttackingThis) {
             if (pinPieceAttackingThis instanceof Rook)
                 return !(pinPieceAttackingThis.getRow() == destRow || pinPieceAttackingThis.getCol() == destCol)
                         && destSquare.containsAttacker(this)
                         && enemiesAttackingDest == 0
-                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD);
+                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol);
             else if (pinPieceAttackingThis instanceof Bishop)
                 return !Helper.isValidDiagonal(pinPieceAttackingThis, destRow, destCol)
                         && destSquare.containsAttacker(this)
                         && enemiesAttackingDest == 0
-                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD);
+                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol);
             else if (pinPieceAttackingThis instanceof Queen)
                 return !(pinPieceAttackingThis.getRow() == destRow || pinPieceAttackingThis.getCol() == destCol)
                         && !Helper.isValidDiagonal(pinPieceAttackingThis, destRow, destCol)
                         && destSquare.containsAttacker(this)
                         && enemiesAttackingDest == 0
-                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD);
+                        && Helper.isNotOccupiedByFriendly(this, destRow, destCol);
 
         }
         return destSquare.containsAttacker(this)
                 && enemiesAttackingDest == 0
-                && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD);
+                && Helper.isNotOccupiedByFriendly(this, destRow, destCol);
 
     }
 
@@ -106,11 +104,16 @@ public class King implements Piece {
         return pinPieceAttackingThis != null;
     }
 
+    @Override
+    public void mapAttackSquares() {
+        AttackerMap.get().markKingAttackSquares(this);
+    }
+
     public Piece getPieceAttacking() {
         if (pinPieceAttackingThis != null)
             return pinPieceAttackingThis;
         else {
-            AttackerMap attackerMap = BOARD.getAttackerMap();
+            AttackerMap attackerMap = AttackerMap.get();
             AttackerSquare kingSquare = attackerMap.getSquare(row, col);
             Set<Piece> attackingPieces = kingSquare.getAttackingPieces();
             for (Piece attackPiece : attackingPieces)
@@ -134,7 +137,7 @@ public class King implements Piece {
         if ((destCol == 1 || destCol == 2 || destCol == 6)
                 && ((isWhite() && destRow == 0) || (!isWhite() && destRow == 7))) {
             int rookCol = destCol > col ? 7 : 0;
-            Piece pieceToCastle = BOARD.getPiece(destRow, rookCol);
+            Piece pieceToCastle = Board.get().getPiece(destRow, rookCol);
 
             if (pieceToCastle == null //If is an empty square
                     || !pieceToCastle.getClass().equals(Rook.class)) { //If the piece occupying the square is not a rook.
@@ -144,19 +147,19 @@ public class King implements Piece {
             Rook rookToCastle = (Rook) pieceToCastle;
             return rookToCastle.isWhite() == isWhite()
                     && rookToCastle.canCastle()
-                    && Helper.isPathClearToCastle(this, destRow, rookCol, BOARD);
+                    && Helper.isPathClearToCastle(this, destRow, rookCol);
         } else return false;
     }
 
     public boolean isChecked() {
-        AttackerSquare kingSquare = BOARD.getAttackerMap().getSquare(row, col);
+        AttackerSquare kingSquare = AttackerMap.get().getSquare(row, col);
         int numKingAttackers = IS_WHITE ? kingSquare.getBlackCount() : kingSquare.getWhiteCount();
         return numKingAttackers > 0
                 || pinPieceAttackingThis != null;
     }
 
     public boolean isMated() {
-        AttackerSquare kingSquare = BOARD.getAttackerMap().getSquare(row, col);
+        AttackerSquare kingSquare = AttackerMap.get().getSquare(row, col);
         int numKingAttackers = IS_WHITE ? kingSquare.getBlackCount() : kingSquare.getWhiteCount();
         if (numKingAttackers == 0) {
             return false;
@@ -164,11 +167,11 @@ public class King implements Piece {
             if (hasLegalMove()) return false;
             else {
                 //get the squares leading from the king all the way to the attacker. if any piece can move there (not pinned + legal move), then return false.
-                List<Piece> friendlyPieces = IS_WHITE ? BOARD.getWhitePieces() : BOARD.getBlackPieces();
+                List<Piece> friendlyPieces = IS_WHITE ? Board.get().getWhitePieces() : Board.get().getBlackPieces();
                 if (friendlyPieces.size() == 1) return true;
                 for (Piece piece : friendlyPieces) {
                     if (piece instanceof King) continue;
-                    if (Helper.canBlockOrCapture(piece, BOARD)) return false;
+                    if (Helper.canBlockOrCapture(piece, Board.get())) return false;
                 }
                 return true;
             }
@@ -186,7 +189,7 @@ public class King implements Piece {
         int endCol = Math.min(7, col + 1);
         for (int i = startRow; i <= endRow; i++) {
             for (int j = startCol; j <= endCol; j++) {
-                AttackerSquare square = BOARD.getAttackerMap().getSquare(i, j);
+                AttackerSquare square = AttackerMap.get().getSquare(i, j);
                 int enemiesOnSquare = IS_WHITE ? square.getBlackCount() : square.getWhiteCount();
                 //If we find a square with no enemy pieces attacking it, then the king has a legal move.
                 if ((row != i || col != j) && canMove(i, j))

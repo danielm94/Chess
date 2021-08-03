@@ -5,56 +5,36 @@ import chessgui.piece.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO: If you find out there is no need for piece casting for pawns/kings/knights remove casts
 public class AttackerMap {
-    private final List<List<AttackerSquare>> ATTACKED_SQUARES_MAP;
-    private final Board board;
+    private static List<List<AttackerSquare>> ATTACKED_SQUARES_MAP;
+    private static AttackerMap attackerMap;
 
-    public AttackerMap(Board board) {
-        this.board = board;
-        this.ATTACKED_SQUARES_MAP = new ArrayList<>();
+    private AttackerMap() {
+    }
+
+    public static AttackerMap get() {
+        if (attackerMap == null) attackerMap = new AttackerMap();
+        return attackerMap;
+    }
+
+    public void setupAttackerMap() {
+        ATTACKED_SQUARES_MAP = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             ATTACKED_SQUARES_MAP.add(new ArrayList<>());
             for (int j = 0; j < 8; j++) {
                 ATTACKED_SQUARES_MAP.get(i).add(new AttackerSquare(i, j));
             }
         }
-        setUpAttackerMap();
+        mapAllPieces();
     }
 
-    private void setUpAttackerMap() {
-        List<Piece> whitePieces = board.getWhitePieces();
-        List<Piece> blackPieces = board.getBlackPieces();
+    public void mapAllPieces() {
+        List<Piece> whitePieces = Board.get().getWhitePieces();
+        List<Piece> blackPieces = Board.get().getBlackPieces();
         for (Piece piece : whitePieces)
-            if (piece.getClass().equals(Pawn.class))
-                markPawnAttackSquares((Pawn) piece);
-            else if (piece.getClass().equals(King.class))
-                markKingAttackSquares((King) piece);
-            else if (piece.getClass().equals(Knight.class))
-                markKnightAttackSquares((Knight) piece);
-            else if (piece.getClass().equals(Rook.class))
-                markVerticalHorizontalAttackSquares(piece);
-            else if (piece.getClass().equals(Bishop.class))
-                markDiagonalAttackSquares(piece);
-            else if (piece.getClass().equals(Queen.class)) {
-                markVerticalHorizontalAttackSquares(piece);
-                markDiagonalAttackSquares(piece);
-            }
+            piece.mapAttackSquares();
         for (Piece piece : blackPieces)
-            if (piece.getClass().equals(Pawn.class))
-                markPawnAttackSquares((Pawn) piece);
-            else if (piece.getClass().equals(King.class))
-                markKingAttackSquares((King) piece);
-            else if (piece.getClass().equals(Knight.class))
-                markKnightAttackSquares((Knight) piece);
-            else if (piece.getClass().equals(Rook.class))
-                markVerticalHorizontalAttackSquares(piece);
-            else if (piece.getClass().equals(Bishop.class))
-                markDiagonalAttackSquares(piece);
-            else if (piece.getClass().equals(Queen.class)) {
-                markVerticalHorizontalAttackSquares(piece);
-                markDiagonalAttackSquares(piece);
-            }
+            piece.mapAttackSquares();
     }
 
     public void clearPieceAttackSquares(Piece piece) {
@@ -65,14 +45,14 @@ public class AttackerMap {
     public void clearPiecePins(Piece piece) {
         if (piece instanceof PinPiece)
             if (piece.isWhite()) {
-                for (Piece blackPiece : board.getBlackPieces()) {
+                for (Piece blackPiece : Board.get().getBlackPieces()) {
                     if (blackPiece.isPinnedBy(piece)) {
                         blackPiece.clearPieceThisIsPinnedBy();
                         ((PinPiece) piece).clearPieceThisIsPinning();
                     }
                 }
             } else {
-                for (Piece whitePiece : board.getWhitePieces()) {
+                for (Piece whitePiece : Board.get().getWhitePieces()) {
                     if (whitePiece.isPinnedBy(piece)) {
                         whitePiece.clearPieceThisIsPinnedBy();
                         ((PinPiece) piece).clearPieceThisIsPinning();
@@ -84,27 +64,14 @@ public class AttackerMap {
     public void updatePieceAttackSquares(Piece piece) {
         clearPieceAttackSquares(piece);
         clearPiecePins(piece);
-        if (piece.getClass().equals(Pawn.class))
-            markPawnAttackSquares((Pawn) piece);
-        else if (piece.getClass().equals(King.class))
-            markKingAttackSquares((King) piece);
-        else if (piece.getClass().equals(Knight.class))
-            markKnightAttackSquares((Knight) piece);
-        else if (piece.getClass().equals(Rook.class))
-            markVerticalHorizontalAttackSquares(piece);
-        else if (piece.getClass().equals(Bishop.class))
-            markDiagonalAttackSquares(piece);
-        else if (piece.getClass().equals(Queen.class)) {
-            markVerticalHorizontalAttackSquares(piece);
-            markDiagonalAttackSquares(piece);
-        }
+        piece.mapAttackSquares();
     }
 
     public AttackerSquare getSquare(int row, int col) {
         return ATTACKED_SQUARES_MAP.get(row).get(col);
     }
 
-    private void markPawnAttackSquares(Pawn pawn) {
+    public void markPawnAttackSquares(Pawn pawn) {
         int row = pawn.getRow();
         int col = pawn.getCol();
         if (pawn.isWhite()) {
@@ -120,7 +87,7 @@ public class AttackerMap {
         }
     }
 
-    private void markKingAttackSquares(King king) {
+    public void markKingAttackSquares(King king) {
         int row = king.getRow();
         int col = king.getCol();
         int startRow = Math.max(0, row - 1);
@@ -136,7 +103,7 @@ public class AttackerMap {
 
     }
 
-    private void markKnightAttackSquares(Knight knight) {
+    public void markKnightAttackSquares(Knight knight) {
         int row = knight.getRow();
         int col = knight.getCol();
         int startRow = Math.max(row - 2, 0);
@@ -150,7 +117,7 @@ public class AttackerMap {
                     ATTACKED_SQUARES_MAP.get(i).get(j).addAttacker(knight);
     }
 
-    private void markVerticalHorizontalAttackSquares(Piece piece) {
+    public void markVerticalHorizontalAttackSquares(Piece piece) {
         int row = piece.getRow();
         int col = piece.getCol();
 
@@ -167,7 +134,7 @@ public class AttackerMap {
         if (col < 7) markSquaresToDestination(piece, row, 7);
     }
 
-    private void markDiagonalAttackSquares(Piece piece) {
+    public void markDiagonalAttackSquares(Piece piece) {
         int row = piece.getRow();
         int col = piece.getCol();
         int endRow = row;
@@ -228,7 +195,7 @@ public class AttackerMap {
         while (row != endRow || col != endCol) {
             AttackerSquare square = ATTACKED_SQUARES_MAP.get(row).get(col);
             square.addAttacker(piece);
-            Piece pieceOnSquare = board.getPiece(row, col);
+            Piece pieceOnSquare = Board.get().getPiece(row, col);
             if (pieceOnSquare != null) {
                 if (pieceOnSquare.isWhite() != piece.isWhite()) checkForPins(piece, row, col, endRow, endCol);
                 break;
@@ -240,7 +207,7 @@ public class AttackerMap {
         }
         AttackerSquare square = ATTACKED_SQUARES_MAP.get(row).get(col);
         square.addAttacker(piece);
-        Piece pieceOnSquare = board.getPiece(row, col);
+        Piece pieceOnSquare = Board.get().getPiece(row, col);
         if (pieceOnSquare != null) {
             if (pieceOnSquare.isWhite() != piece.isWhite())
                 if (pieceOnSquare instanceof King)
@@ -255,12 +222,12 @@ public class AttackerMap {
         it is not possible for there to be a pin, otherwise you'd be looking for pins outside of the 8x8 board.
          */
         if (startRow == endRow && startCol == endCol) return;
-        Piece enemyPiece = board.getPiece(startRow, startCol);
+        Piece enemyPiece = Board.get().getPiece(startRow, startCol);
         if (enemyPiece.getClass().equals(King.class)) {
             enemyPiece.setPieceThisIsPinnedBy(piece);
             return;
         }
-        King enemyKing = board.getKing(!piece.isWhite());
+        King enemyKing = Board.get().getKing(!piece.isWhite());
 
         //Preliminary checks to see if it's even worth looking for pins.
         //If the king is neither on the same row or col as the rook then it is not possible for the rook to be pinning anything.
@@ -288,7 +255,7 @@ public class AttackerMap {
         if (endCol > col) col++;
         else if (endCol < col) col--;
         while (row != endRow || col != endCol) {
-            Piece pieceOnSquare = board.getPiece(row, col);
+            Piece pieceOnSquare = Board.get().getPiece(row, col);
             if (pieceOnSquare != null) if (pieceOnSquare == enemyKing) {
                 enemyPiece.setPieceThisIsPinnedBy(piece);
                 if (piece.getClass().equals(Rook.class)) {
@@ -307,7 +274,7 @@ public class AttackerMap {
             if (col < endCol) col++;
             else if (col > endCol) col--;
         }
-        Piece pieceOnSquare = board.getPiece(row, col);
+        Piece pieceOnSquare = Board.get().getPiece(row, col);
         if (pieceOnSquare != null)
             if (pieceOnSquare == enemyKing) {
                 enemyPiece.setPieceThisIsPinnedBy(piece);
@@ -322,5 +289,10 @@ public class AttackerMap {
                     temp.setPieceThisIsPinning(enemyPiece);
                 }
             }
+    }
+
+    public void dispose() {
+        attackerMap = null;
+        AttackerMap.get().dispose();
     }
 }

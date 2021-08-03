@@ -1,12 +1,17 @@
 package chessgui.gui;
 
+import chessgui.gui.resource_paths.SoundPaths;
+
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import java.util.Random;
 
 
-public class SoundEffects {
+public final class SoundEffects {
+    private SoundEffects() {
+    }
+
     private static void playSoundEffect(String filePath) {
         try {
             AudioInputStream ais = AudioSystem.getAudioInputStream(ClassLoader.getSystemResource(filePath));
@@ -29,10 +34,17 @@ public class SoundEffects {
     public static void playInvalidMoveSound() {
         int rand = new Random().nextInt(3);
         switch (rand) {
-            case 0 -> playSoundEffect(SoundPaths.INVALID_MOVE1.getPath());
-            case 1 -> playSoundEffect(SoundPaths.INVALID_MOVE2.getPath());
-            case 2 -> playSoundEffect(SoundPaths.INVALID_MOVE3.getPath());
+            case 0:
+                playSoundEffect(SoundPaths.INVALID_MOVE1.getPath());
+                break;
+            case 1:
+                playSoundEffect(SoundPaths.INVALID_MOVE2.getPath());
+                break;
+            default:
+                playSoundEffect(SoundPaths.INVALID_MOVE3.getPath());
+                break;
         }
+
     }
 
     public static void playStalemateSound() {
@@ -41,5 +53,13 @@ public class SoundEffects {
 
     public static void playCheckmateSound() {
         playSoundEffect(SoundPaths.CHECKMATE.getPath());
+    }
+
+    public static void playStalemateBy50MoveRuleSound() {
+        playSoundEffect(SoundPaths.STALEMATE_50.getPath());
+    }
+
+    public static void playEasterEgg() {
+        playSoundEffect(SoundPaths.EASTER_EGG.getPath());
     }
 }

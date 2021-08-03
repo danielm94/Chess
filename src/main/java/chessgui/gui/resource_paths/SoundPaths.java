@@ -1,4 +1,4 @@
-package chessgui.gui;
+package chessgui.gui.resource_paths;
 
 public enum SoundPaths {
     CHECK("sound/check.wav"),
@@ -7,7 +7,9 @@ public enum SoundPaths {
     INVALID_MOVE2("sound/invalid_move2.wav"),
     INVALID_MOVE3("sound/invalid_move3.wav"),
     STALEMATE("sound/stalemate.wav"),
-    CHECKMATE("sound/checkmate.wav");
+    STALEMATE_50("sound/stalemate_50.wav"),
+    CHECKMATE("sound/checkmate.wav"),
+    EASTER_EGG("sound/easter_egg.wav");
 
     private final String PATH;
 

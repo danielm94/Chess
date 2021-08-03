@@ -1,5 +1,6 @@
 package chessgui.piece;
 
+import chessgui.board.AttackerMap;
 import chessgui.board.AttackerSquare;
 import chessgui.board.Board;
 import chessgui.board.Helper;
@@ -11,16 +12,14 @@ public class Bishop implements PinPiece {
     private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
-    private final Board BOARD;
     private Piece pieceThisIsPinnedBy;
     private Piece pieceThisIsPinning;
 
-    public Bishop(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
+    public Bishop(int row, int col, boolean isWhite, String FILE_PATH) {
         this.IS_WHITE = isWhite;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
-        this.BOARD = board;
     }
 
     @Override
@@ -55,17 +54,17 @@ public class Bishop implements PinPiece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        if (BOARD.inStateOfCheck()) {
-            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
-            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+        if (Board.get().inStateOfCheck()) {
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, Board.get());
+            AttackerSquare destinationSquare = AttackerMap.get().getSquare(destRow, destCol);
             return !this.isPinned()
                     && destinationSquare.containsAttacker(this)
                     && squaresToBlockOrCapture.contains(destinationSquare);
         } else {
             /* If the attacker map object has this piece listed
               as attacking the specified row & column and it's not occupied by a friendly...*/
-            if (BOARD.getAttackerMap().getSquare(destRow, destCol).containsAttacker(this)
-                    && Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD))
+            if (AttackerMap.get().getSquare(destRow, destCol).containsAttacker(this)
+                    && Helper.isNotOccupiedByFriendly(this, destRow, destCol))
                 //If we're being pinned
                 if (this.isPinned()) {
                 /* The only way a bishop can legally move while pinned is if it's being pinned diagonally
@@ -74,8 +73,12 @@ public class Bishop implements PinPiece {
                 attacker.
                     Check if we're being pinned by a bishop or a queen and that the destination square is on the same
                 attacking diagonal as the piece that is pinning this bishop. */
-                    return (pieceThisIsPinnedBy instanceof Queen || pieceThisIsPinnedBy instanceof Bishop)
-                            && Helper.isValidDiagonal(pieceThisIsPinnedBy, destRow, destCol);
+                    if (pieceThisIsPinnedBy instanceof Queen) {
+                        if (pieceThisIsPinnedBy.getRow() == row || pieceThisIsPinnedBy.getCol() == col) return false;
+                        else return Helper.isValidDiagonal(pieceThisIsPinnedBy, destRow, destCol);
+                    } else if (pieceThisIsPinnedBy instanceof Bishop) {
+                        return Helper.isValidDiagonal(pieceThisIsPinnedBy, destRow, destCol);
+                    }
                 } else return true; //If we're not pinned then the bishop is free to move there.
             return false;
         }
@@ -99,6 +102,11 @@ public class Bishop implements PinPiece {
     @Override
     public boolean isPinned() {
         return pieceThisIsPinnedBy != null;
+    }
+
+    @Override
+    public void mapAttackSquares() {
+        AttackerMap.get().markDiagonalAttackSquares(this);
     }
 
     @Override

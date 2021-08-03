@@ -1,5 +1,6 @@
 package chessgui.piece;
 
+import chessgui.board.AttackerMap;
 import chessgui.board.AttackerSquare;
 import chessgui.board.Board;
 import chessgui.board.Helper;
@@ -11,18 +12,16 @@ public class Rook implements PinPiece {
     private int col;
     private final boolean IS_WHITE;
     private final String FILE_PATH;
-    private final Board BOARD;
     private boolean canCastle;
     private Piece pieceThisIsPinnedBy;
     private Piece pieceThisIsPinning;
 
-    public Rook(int row, int col, boolean isWhite, String FILE_PATH, Board board) {
+    public Rook(int row, int col, boolean isWhite, String FILE_PATH) {
         this.canCastle = false;
         this.IS_WHITE = isWhite;
         this.row = row;
         this.col = col;
         this.FILE_PATH = FILE_PATH;
-        this.BOARD = board;
     }
 
     @Override
@@ -57,15 +56,15 @@ public class Rook implements PinPiece {
 
     @Override
     public boolean canMove(int destRow, int destCol) {
-        if (BOARD.inStateOfCheck()) {
-            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, BOARD);
-            AttackerSquare destinationSquare = BOARD.getAttackerMap().getSquare(destRow, destCol);
+        if (Board.get().inStateOfCheck()) {
+            Set<AttackerSquare> squaresToBlockOrCapture = Helper.getSquaresToBlockOrCapture(IS_WHITE, Board.get());
+            AttackerSquare destinationSquare = AttackerMap.get().getSquare(destRow, destCol);
             return !this.isPinned()
                     && destinationSquare.containsAttacker(this)
                     && squaresToBlockOrCapture.contains(destinationSquare);
         } else {
-            if (BOARD.getAttackerMap().getSquare(destRow, destCol).containsAttacker(this) &&
-                    Helper.isNotOccupiedByFriendly(this, destRow, destCol, BOARD)) {
+            if (AttackerMap.get().getSquare(destRow, destCol).containsAttacker(this) &&
+                    Helper.isNotOccupiedByFriendly(this, destRow, destCol)) {
                 if (this.isPinned()) {
                     if (pieceThisIsPinnedBy.getRow() == row)
                         return destRow == pieceThisIsPinnedBy.getRow();
@@ -130,4 +129,8 @@ public class Rook implements PinPiece {
         return (IS_WHITE ? "White " : "Black ") + "Rook @ " + (char) ('A' + col) + (row + 1);
     }
 
+    @Override
+    public void mapAttackSquares() {
+        AttackerMap.get().markVerticalHorizontalAttackSquares(this);
+    }
 }
